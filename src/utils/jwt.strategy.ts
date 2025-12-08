@@ -9,9 +9,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
       secretOrKey: config.get('JWT_SECRET'),
+      passReqToCallback: true,
     });
   }
-  async validate(payload) {
+  async validate(req: Request, payload) {
     type App = {
       appId: string;
       kmsId: string;
@@ -19,12 +20,13 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       subdomain: string;
       edvId: string;
     };
+    const sessionDetail = req['user'];
     const appDetail: App = {
       appId: payload?.appId,
-      kmsId: payload?.kmsId,
-      whitelistedCors: payload?.whitelistedCors,
+      kmsId: sessionDetail?.kmsId,
+      whitelistedCors: sessionDetail?.whitelistedCors,
       subdomain: payload?.subdomain,
-      edvId: payload?.edvId,
+      edvId: sessionDetail?.edvId,
     };
     return appDetail;
   }
