@@ -40,15 +40,15 @@ export class CreditAuthGuard implements CanActivate {
     if (
       !payload ||
       Object.keys(payload).length === 0 ||
-      !payload['sessionId'] 
+      !payload['sessionId']
     ) {
       throw new UnauthorizedException('Invalid authorization token');
     }
-    const sessionDetail = await redisClient.get(payload.sessionId)
+    const sessionDetail = await redisClient.get(payload.sessionId);
     if (!sessionDetail) {
       throw new UnauthorizedException(['Token is expired or invalid']);
     }
-    const sessionDetailJson = JSON.parse(sessionDetail)
+    const sessionDetailJson = JSON.parse(sessionDetail);
     if (
       !sessionDetailJson ||
       Object.keys(sessionDetailJson).length === 0 ||
