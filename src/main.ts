@@ -21,7 +21,9 @@ import { StatusModule } from './status/status.module';
 import { CreditManagerModule } from './credit-manager/credit-manager.module';
 import { UsageModule } from './usage/usage.module';
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule, {
+    cors: true,
+  });
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.use(express.static(path.join(__dirname, '../public')));
