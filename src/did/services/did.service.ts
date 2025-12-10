@@ -757,8 +757,8 @@ export class DidService {
     const { wallet, address } = await this.hidWallet.generateWallet(
       appMenemonic,
     );
-    Logger.log(`Address: ${address}`)
-    const isDevMode = this.config.get('NODE_ENV') === 'development'
+    Logger.log(`Address: ${address}`);
+    const isDevMode = this.config.get('NODE_ENV') === 'development';
     if (!isDevMode && (await this.checkAllowence(address))) {
       await this.txnService.sendDIDTxn(
         didDocument,
