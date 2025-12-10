@@ -8,6 +8,7 @@ import {
 import * as jwt from 'jsonwebtoken';
 
 import { NextFunction, Request, Response } from 'express';
+import { redisClient } from '../redis.provider';
 @Injectable()
 export class WhitelistSSICorsMiddleware implements NestMiddleware {
   async use(req: Request, res: Response, next: NextFunction) {
@@ -32,6 +33,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
 
     const subdomain =
       req.subdomains.length > 0 ? req.subdomains.at(-1) : host.split('.')[0];
+    let sessionDetailJson;
     Logger.debug(`Subdomain ${subdomain} `, 'Middleware');
     Logger.debug(`Host ${host} `, 'Middleware');
 
@@ -82,7 +84,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
         !decoded ||
         Object.keys(decoded).length < 0 ||
         !decoded['subdomain'] ||
-        !decoded['whitelistedCors']
+        !decoded['sessionId']
       ) {
         throw new UnauthorizedException(['Invalid authorization token']);
       }
@@ -98,11 +100,22 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
       // if (matchOrigin && whitelistedOrigins.includes(matchOrigin[0])) {
       //   return next();
       // }
-
+      const sessionDetail = await redisClient.get(decoded.sessionId);
+      if (!sessionDetail) {
+        throw new UnauthorizedException(['Token expired']);
+      }
+      sessionDetailJson = await JSON.parse(sessionDetail);
+      if (
+        Object.keys(sessionDetailJson).length < 0 ||
+        !sessionDetailJson['subdomain'] == decoded.subdomain ||
+        !sessionDetailJson['whitelistedCors']
+      ) {
+        throw new UnauthorizedException(['Invalid authorization token']);
+      }
       const appInfo: App = {
-        whitelistedCors: decoded['whitelistedCors'],
-        subdomain: decoded['subdomain'],
-        edvId: decoded['edvId'],
+        whitelistedCors: sessionDetailJson['whitelistedCors'],
+        subdomain: sessionDetailJson['subdomain'],
+        edvId: sessionDetailJson['edvId'],
       };
 
       if (appInfo.subdomain != subdomain) {
@@ -119,6 +132,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
 
     req.user = {};
     req.user['subdomain'] = subdomain;
+    req.user = { ...sessionDetailJson };
     next();
   }
 }

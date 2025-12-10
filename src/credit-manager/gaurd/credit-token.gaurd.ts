@@ -14,6 +14,7 @@ import {
   CreateCreditManagerDto,
   ValidityPeriodUnit,
 } from '../dto/create-credit-manager.dto';
+import { redisClient } from 'src/utils/redis.provider';
 
 @UseFilters(AllExceptionsFilter)
 @Injectable()
@@ -39,20 +40,32 @@ export class CreditAuthGuard implements CanActivate {
     if (
       !payload ||
       Object.keys(payload).length === 0 ||
-      payload['purpose'] !== 'CreditRecharge' ||
-      !payload['amount'] ||
-      !payload['validityPeriod'] ||
-      !payload['serviceId']
+      !payload['sessionId']
     ) {
       throw new UnauthorizedException('Invalid authorization token');
     }
+    const sessionDetail = await redisClient.get(payload.sessionId);
+    if (!sessionDetail) {
+      throw new UnauthorizedException(['Token is expired or invalid']);
+    }
+    const sessionDetailJson = JSON.parse(sessionDetail);
+    if (
+      !sessionDetailJson ||
+      Object.keys(sessionDetailJson).length === 0 ||
+      sessionDetailJson['purpose'] !== 'CreditRecharge' ||
+      !sessionDetailJson['amount'] ||
+      !sessionDetailJson['validityPeriod'] ||
+      !sessionDetailJson['serviceId']
+    ) {
+      throw new UnauthorizedException("Invalid token. Can't process credit");
+    }
     const creditDetail: CreateCreditManagerDto = {
-      totalCredits: payload['amount'],
-      validityDuration: payload['validityPeriod'],
+      totalCredits: sessionDetailJson['amount'],
+      validityDuration: sessionDetailJson['validityPeriod'],
       validityDurationUnit:
-        payload['validityPeriodUnit'] || ValidityPeriodUnit.DAYS,
-      serviceId: payload['serviceId'],
-      creditDenom: payload['amountDenom'] || 'uHID',
+        sessionDetailJson['validityPeriodUnit'] || ValidityPeriodUnit.DAYS,
+      serviceId: sessionDetailJson['serviceId'],
+      creditDenom: sessionDetailJson['amountDenom'] || 'uHID',
     };
     request['creditDetail'] = creditDetail;
     return true;

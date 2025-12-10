@@ -47,6 +47,7 @@
     "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#multiThreading",
     "hypersign-edv-client": "github:hypersign-protocol/hypersign-edv-client#deleteByDocumentId",
     "idb-keyval": "^6.2.1",
+    "ioredis": "^5.8.2",
     "mongoose": "^6.8.3",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.1",
