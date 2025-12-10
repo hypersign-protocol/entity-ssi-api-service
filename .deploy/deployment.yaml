@@ -66,6 +66,8 @@ spec:
           value: __Tx_Query_API__
         - name: RABBIT_MQ_URI
           value: __RABBIT_MQ_URI__
+        - name: NODE_ENV
+          value: __NODE_ENV__
         - name: WHITELISTED_CORS
           value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://api.entity-test.hypersign.id','https://wallet-prajna.hypersign.id']"
         volumeMounts:
