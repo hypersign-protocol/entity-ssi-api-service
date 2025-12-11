@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:20.19.2
 WORKDIR /usr/src/app
 COPY ./package.json .
 RUN npx patch-package -y 
