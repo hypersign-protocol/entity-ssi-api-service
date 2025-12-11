@@ -1,4 +1,4 @@
-FROM node:18
+FROM node:20.19.2
 RUN npm install -g npm@latest
 WORKDIR /usr/src/app
 COPY ./package.json .
