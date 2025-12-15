@@ -11,8 +11,6 @@ import {
 } from '../dto/create-credit-manager.dto';
 import { CreditManagerRepository } from '../repository/credit-manager.repository';
 import { Status } from '../schema/credit-manager.schema';
-import { constant } from '../utils';
-import { urlSanitizer } from 'src/utils/sanitizeUrl.validator';
 
 @Injectable()
 export class CreditService {
@@ -228,12 +226,4 @@ export class CreditService {
     }
   }
 
-  async grantAdminAllowanceForTxFee(appId) {
-    const url = `${urlSanitizer(constant.AUTHZ_URL, false)}/${appId}`;
-    const data = await fetch(url);
-    if (data && data.ok) {
-      const resp = await data.json();
-      return resp;
-    }
-  }
 }
