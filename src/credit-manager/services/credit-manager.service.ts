@@ -38,7 +38,6 @@ export class CreditService {
         createCreditManagerDto.validityDuration,
       );
       // TOOD need to validate if authz grant was given to that wallet addres on blockchain.
-      grantDetail = body;
     }
     const newCreditDetail = {
       ...createCreditManagerDto,
