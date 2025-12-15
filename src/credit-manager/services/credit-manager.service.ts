@@ -86,15 +86,6 @@ export class CreditService {
         creditDocument.validityDuration,
       );
       paramsToUpdate['expiresAt'] = expiresAt;
-
-      const grantDetail = await this.grantAdminAllowanceForTxFee(
-        creditDocument.serviceId,
-      );
-      if (grantDetail) {
-        grantDetail['credit']['used'] = 0;
-        (paramsToUpdate['credit'] = grantDetail?.credit),
-          (paramsToUpdate['creditScope'] = grantDetail?.creditScope);
-      }
     }
     return this.creditRepository.updateCreditDetail(
       { _id: creditId },
