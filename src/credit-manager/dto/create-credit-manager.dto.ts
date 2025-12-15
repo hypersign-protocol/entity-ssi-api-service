@@ -36,8 +36,8 @@ export class Credit {
     description: 'Token denom',
     example: 'uhid',
   })
-  @IsNumber()
-  denom: number;
+  @IsString()
+  denom: string;
   @ApiProperty({
     name: 'used',
     description: 'Total used credit',
