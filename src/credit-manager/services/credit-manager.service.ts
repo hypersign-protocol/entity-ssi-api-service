@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import {
   CreateCreditManagerDto,
+  CreditManagerRequestDto,
   ValidityPeriodUnit,
 } from '../dto/create-credit-manager.dto';
 import { CreditManagerRepository } from '../repository/credit-manager.repository';
@@ -16,7 +17,10 @@ import { urlSanitizer } from 'src/utils/sanitizeUrl.validator';
 @Injectable()
 export class CreditService {
   constructor(private readonly creditRepository: CreditManagerRepository) {}
-  async addCreditDetail(createCreditManagerDto: CreateCreditManagerDto) {
+  async addCreditDetail(
+    body: CreditManagerRequestDto,
+    createCreditManagerDto: CreateCreditManagerDto,
+  ) {
     Logger.log('addCreditDetail() method starts....', 'CreditService');
     const ifActivePlanExists =
       await this.creditRepository.findParticularCreditDetail({
@@ -35,10 +39,7 @@ export class CreditService {
       expiryTime = this.calculateExpiryTime(
         createCreditManagerDto.validityDuration,
       );
-      grantDetail = await this.grantAdminAllowanceForTxFee(
-        createCreditManagerDto.serviceId,
-      );
-      grantDetail['credit']['used'] = 0;
+      grantDetail = body;
     }
     const newCreditDetail = {
       ...createCreditManagerDto,
