@@ -34,12 +34,11 @@ export class CreditService {
     );
     createCreditManagerDto.validityDuration = validityPeriodInDays;
     Logger.debug(`Credit status:${status}`);
-    let grantDetail;
+    const grantDetail = body;
     if (status === 'Active') {
       expiryTime = this.calculateExpiryTime(
         createCreditManagerDto.validityDuration,
       );
-      grantDetail = body;
     }
     const newCreditDetail = {
       ...createCreditManagerDto,
