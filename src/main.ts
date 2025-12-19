@@ -48,7 +48,7 @@ async function bootstrap() {
     nodeRestEndpoint,
     namespace,
   });
-  await hsSSIdkInstance.init();
+  // await hsSSIdkInstance.init();
   globalThis.hsSSIdkInstance = hsSSIdkInstance;
 
   const mnemonic_EnglishMnemonic: EnglishMnemonic = process.env
