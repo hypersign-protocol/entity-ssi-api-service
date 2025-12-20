@@ -52,7 +52,5 @@ export class UpdateCredentialDto {
     example: 'did:hid:testnet:........#key-${idx}',
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @IsNotEmpty()
   verificationMethodId: string;
 }

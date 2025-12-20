@@ -1,34 +1,44 @@
 import {
-  applyDecorators,
-  SetMetadata,
-  BadRequestException,
-} from '@nestjs/common';
+  registerDecorator,
+  ValidationArguments,
+  ValidationOptions,
+} from 'class-validator';
 
-export const ValidateVerificationMethodId = (): PropertyDecorator => {
-  return applyDecorators(
-    SetMetadata('validateVerificationMethodId', true),
-    (target: object, propertyKey: string | symbol) => {
-      let original = target[propertyKey];
-      const descriptor: PropertyDescriptor = {
-        get: () => original,
-        set: (val: any) => {
-          if (val.trim() === '') {
-            throw new BadRequestException([
-              `${propertyKey.toString()} cannot be empty`,
-            ]);
+const VERIFICATION_METHOD_ID_REGEX =
+  /^did:hid:(testnet:)?[a-zA-Z0-9]{32,}#[a-zA-Z0-9\-]+$/;
+
+export function ValidateVerificationMethodId(
+  validationOptions?: ValidationOptions,
+) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'ValidateVerificationMethodId',
+      target: object.constructor,
+      propertyName,
+      options: {
+        message: `${propertyName} contains an invalid verification method id`,
+        ...validationOptions,
+      },
+      validator: {
+        validate(value: any, _args: ValidationArguments) {
+          // Handle array case
+          if (Array.isArray(value)) {
+            if (value.length === 0) return false;
+
+            return value.every((v) => isValidVerificationMethodId(v));
           }
 
-          const did = val.split('#')[0];
-          if (!did.includes('did:hid:')) {
-            throw new BadRequestException([
-              `Invalid ${propertyKey.toString()}`,
-            ]);
-          }
-
-          original = val;
+          // Handle single string case
+          return isValidVerificationMethodId(value);
         },
-      };
-      Object.defineProperty(target, propertyKey, descriptor);
-    },
-  );
-};
+      },
+    });
+  };
+}
+
+function isValidVerificationMethodId(value: any): boolean {
+  if (typeof value !== 'string') return false;
+  if (!value.trim()) return false;
+
+  return VERIFICATION_METHOD_ID_REGEX.test(value);
+}
