@@ -10,7 +10,7 @@ const VERIFICATION_METHOD_ID_REGEX =
 export function ValidateVerificationMethodId(
   validationOptions?: ValidationOptions,
 ) {
-  return function (object: Object, propertyName: string) {
+  return function (object: unknown, propertyName: string) {
     registerDecorator({
       name: 'ValidateVerificationMethodId',
       target: object.constructor,
