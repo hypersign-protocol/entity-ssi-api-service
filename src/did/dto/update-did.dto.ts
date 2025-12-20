@@ -46,9 +46,9 @@ export class verificationMethod {
     example:
       'did:hid:testnet:z28ScfSszr2zi2Bd7qmNE4mfHX5j8nCwx4DBF6nAUHu4p#key-1',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   id: string;
+
   @ApiProperty({
     description: 'Verification Method type',
     example: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -244,6 +244,7 @@ export class UpdateDidDto {
   @IsString()
   @IsNotEmpty()
   did?: string;
+  
   @ApiProperty({
     description: 'Verification Method id for did registration',
     example: 'did:hid:testnet:........#key-${idx}',
@@ -251,11 +252,8 @@ export class UpdateDidDto {
   })
   @IsOptional()
   @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  })
   verificationMethodId?: string;
+
   @ApiProperty({
     description: 'Sign Info',
     example: [

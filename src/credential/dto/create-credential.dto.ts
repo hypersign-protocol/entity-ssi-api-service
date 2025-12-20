@@ -240,14 +240,15 @@ export class CredentialProof {
   })
   @IsString()
   created: string;
+  
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification id using which credential has signed',
     example: 'did:hid:testnet:...............#key-${id}',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   verificationMethod: string;
+  
   @ApiProperty({
     name: 'proofPurpose',
     description: '',

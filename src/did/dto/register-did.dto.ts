@@ -39,14 +39,10 @@ export class ClientSpec {
 export class SignInfo {
   @ApiProperty({
     description: 'Verification Method id for did registration',
-    example: 'did:hid:testnet:........#key-${idx}',
+    example: 'did:hid:testnet:123...#key-1',
     required: true,
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  })
   verification_method_id: string;
 
   @ApiProperty({
@@ -162,11 +158,8 @@ export class RegisterV2SignInfo {
     required: true,
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  })
   verification_method_id: string;
+  
   @ApiProperty({
     description: 'Signature for clientSpec',
     example: 'afafljagahgp9agjagknaglkj/kagka=',
