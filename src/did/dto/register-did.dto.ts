@@ -94,10 +94,6 @@ export class RegisterDidDto {
   })
   @IsOptional()
   @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  }) // this is to validate if did is generated using empty namespace
   verificationMethodId?: string;
 
   @ApiProperty({
@@ -159,7 +155,7 @@ export class RegisterV2SignInfo {
   })
   @ValidateVerificationMethodId()
   verification_method_id: string;
-  
+
   @ApiProperty({
     description: 'Signature for clientSpec',
     example: 'afafljagahgp9agjagknaglkj/kagka=',
