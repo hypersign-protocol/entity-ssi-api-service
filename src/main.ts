@@ -41,7 +41,7 @@ async function bootstrap() {
   const offlineSigner = hidWalletInstance.offlineSigner;
   const nodeRpcEndpoint = walletOptions.hidNodeRPCUrl;
   const nodeRestEndpoint = walletOptions.hidNodeRestUrl;
-  const namespace = 'testnet';
+  const namespace = process.env.HID_NETWORK_NAMESPACE || '';
   const hsSSIdkInstance = new HypersignSSISdk({
     offlineSigner,
     nodeRpcEndpoint,
