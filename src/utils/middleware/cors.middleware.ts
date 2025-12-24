@@ -14,7 +14,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
   async use(req: Request, _res: Response, next: NextFunction) {
     Logger.log(
       'WhitelistSSICorsMiddleware: start',
-      'Middleware',
+      'WhitelistSSICorsMiddleware',
     );
 
     const origin = req.get('origin');
@@ -109,7 +109,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
 
     Logger.log(
       'WhitelistSSICorsMiddleware: passed',
-      'Middleware',
+      'WhitelistSSICorsMiddleware',
     );
 
     next();

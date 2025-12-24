@@ -15,18 +15,28 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
   async validate(req: Request, payload) {
     type App = {
       appId: string;
+      userId: string;
       kmsId: string;
       whitelistedCors: Array<string>;
       subdomain: string;
       edvId: string;
+      accessList: string[];
+      grantType: string;
+      env: string;
+      appName: string;
     };
     const sessionDetail = req['user'];
     const appDetail: App = {
       appId: payload?.appId,
+      userId: payload?.userId,
       kmsId: sessionDetail?.kmsId,
       whitelistedCors: sessionDetail?.whitelistedCors,
       subdomain: payload?.subdomain,
       edvId: sessionDetail?.edvId,
+      accessList: sessionDetail?.accessList || [],
+      env: sessionDetail.env,
+      appName: sessionDetail.appName,
+      grantType: sessionDetail?.grantType
     };
     return appDetail;
   }
