@@ -1,11 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { IsBoolean, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsObject, IsOptional, IsString } from 'class-validator';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { IsVcId } from 'src/utils/customDecorator/vc.decorator';
 
 export type CredentialModel = Credential & Document;
 
-@Schema()
+@Schema({
+  timestamps: true,
+})
 export class Credential {
   @IsString()
   @Prop({ required: true })
@@ -30,13 +32,17 @@ export class Credential {
   @Prop({ required: true })
   persist: boolean;
 
+  @IsBoolean()
+  @Prop({ required: true })
+  registerCredentialStatus: boolean;
+
   @IsString()
   @Prop()
   transactionHash: string;
 
-  @IsString()
-  @Prop()
-  type: string;
+  @IsObject()
+  @Prop({ type: 'object' })
+  type: object;
 }
 
 const CredentialSchema = SchemaFactory.createForClass(Credential);

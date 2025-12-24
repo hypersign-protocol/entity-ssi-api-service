@@ -2,11 +2,14 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
+  IsNotEmpty,
   IsNotEmptyObject,
   IsOptional,
   IsString,
   Matches,
+  ValidateIf,
   ValidateNested,
 } from 'class-validator';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
@@ -43,9 +46,9 @@ export class verificationMethod {
     example:
       'did:hid:testnet:z28ScfSszr2zi2Bd7qmNE4mfHX5j8nCwx4DBF6nAUHu4p#key-1',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   id: string;
+
   @ApiProperty({
     description: 'Verification Method type',
     example: 'EcdsaSecp256k1RecoveryMethod2020',
@@ -225,12 +228,23 @@ export class UpdateDidDto {
   @ApiProperty({
     description: 'Did doc to be updated',
     type: DidDoc,
+    required: false,
   })
+  @IsOptional()
   @IsNotEmptyObject()
   @Type(() => DidDoc)
   @ValidateNested()
   didDocument: DidDoc;
-
+  @ApiProperty({
+    description: 'DidDocument id',
+    example: 'did:hid:testnet:rt245vfnk.......',
+    required: false,
+  })
+  @ValidateIf((dto) => dto.name !== undefined && dto.didDocument === undefined)
+  @IsString()
+  @IsNotEmpty()
+  did?: string;
+  
   @ApiProperty({
     description: 'Verification Method id for did registration',
     example: 'did:hid:testnet:........#key-${idx}',
@@ -238,11 +252,8 @@ export class UpdateDidDto {
   })
   @IsOptional()
   @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  })
   verificationMethodId?: string;
+
   @ApiProperty({
     description: 'Sign Info',
     example: [
@@ -266,9 +277,48 @@ export class UpdateDidDto {
   @ApiProperty({
     description: 'Field to check if to deactivate did or to update it ',
     example: false,
+    required: false,
   })
-  deactivate: boolean;
+  @ValidateIf((dto) => dto.didDocument !== undefined)
+  @IsBoolean()
+  deactivate?: boolean;
 
+  @ApiProperty({
+    name: 'name',
+    example: `Issuer Identity`,
+    description: 'Any human-readable name for this DID',
+    required: false,
+  })
+  @IsOptional()
+  name?: string;
+}
+
+export class UpdateDidResp {
+  @ApiProperty({
+    name: 'transactionHash',
+    description: 'Transaction Hash',
+    example: 'XYAIFLKFLKHSLFHKLAOHFOAIHG..........',
+    required: false,
+  })
+  @IsOptional()
+  transactionHash: string;
+  @ApiProperty({
+    name: 'didDocument',
+    description: 'Resolved Did Document',
+    example: DidDoc,
+    required: false,
+  })
+  @IsOptional()
+  didDocument: DidDoc;
+  @ApiProperty({
+    description: 'DidDocument id',
+    example: 'did:hid:testnet:rt245vfnk.......',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  @IsNotEmpty()
+  did?: string;
   @ApiProperty({
     name: 'name',
     example: `Issuer Identity`,

@@ -33,15 +33,16 @@ export class Proof {
   })
   @IsString()
   created: string;
+  
   @ApiProperty({
     name: 'verificationMethod',
     description: 'verificationMethodId which is used for signing',
     example:
       'did:hid:testnet:z6MkvfkK24wE6KxJbw6XadDkmMSZwhmtJx4mYZG6hFci9eNm#key-1',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   verificationMethod: string;
+  
   @ApiProperty({
     name: 'proofPurpose',
     description: 'proofPurpose',
@@ -147,11 +148,8 @@ export class SignDidDto {
     required: true,
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @Matches(/^[a-zA-Z0-9\:]*testnet[a-zA-Z0-9\-:#]*$/, {
-    message: "Did's namespace should be testnet",
-  })
   verificationMethodId: string;
+  
   @ApiProperty({
     name: 'options',
     description: 'optional parameter',

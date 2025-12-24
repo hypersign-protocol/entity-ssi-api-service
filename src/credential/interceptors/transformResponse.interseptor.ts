@@ -24,13 +24,11 @@ export class CredentialResponseInterceptor implements NestInterceptor {
             data[0]['totalCount'].length > 0
               ? data[0]['totalCount'][0].total
               : 0,
-          data: this.mapData(data[0]['data']),
+          data: data[0]['data'],
         };
         return modifiedResponse;
       }),
     );
   }
-  mapData(data) {
-    return data.map((credential) => credential.credentialId);
-  }
+
 }

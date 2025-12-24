@@ -34,20 +34,25 @@ import {
   ApiQuery,
   ApiHeader,
   ApiOkResponse,
+  ApiExcludeEndpoint,
 } from '@nestjs/swagger';
 import { Schemas } from '../schemas/schemas.schema';
 import { SchemaResponseInterceptor } from '../interceptors/transformResponse.interseptor';
 import { GetSchemaList } from '../dto/get-schema.dto';
 import { RegisterSchemaDto } from '../dto/register-schema.dto';
 import { TxnHash } from 'src/did/dto/create-did.dto';
+import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
+import { AccessGuard } from 'src/utils/guards/access.gaurd';
+import { Access } from 'src/utils/customDecorator/access.decorator';
+import { ACCESS_TYPES } from 'src/credit-manager/utils';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Schema')
 @Controller('schema')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), ReduceCreditGuard, AccessGuard)
 export class SchemaController {
   constructor(private readonly schemaService: SchemaService) {}
-
+  @Access(ACCESS_TYPES.WRITE_SCHEMA)
   @Post()
   @ApiCreatedResponse({
     description: 'Schema Created',
@@ -84,6 +89,7 @@ export class SchemaController {
     return this.schemaService.create(createSchemaDto, appDetail);
   }
   @UsePipes(new ValidationPipe({ transform: true }))
+  @Access(ACCESS_TYPES.READ_SCHEMA)
   @Get()
   @ApiResponse({
     status: 200,
@@ -127,7 +133,7 @@ export class SchemaController {
     const appDetial = req.user;
     return this.schemaService.getSchemaList(appDetial, paginationOption);
   }
-
+  @Access(ACCESS_TYPES.READ_SCHEMA)
   @Get(':schemaId')
   @ApiResponse({
     status: 200,
@@ -157,7 +163,8 @@ export class SchemaController {
 
     return this.schemaService.resolveSchema(schemaId);
   }
-
+  @ApiExcludeEndpoint()
+  @Access(ACCESS_TYPES.WRITE_SCHEMA)
   @Post('/register')
   @ApiOkResponse({
     description: 'Registered schema successfully',

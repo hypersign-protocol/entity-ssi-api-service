@@ -17,8 +17,13 @@ import { DidModule } from './did/did.module';
 import { SchemaModule } from './schema/schema.module';
 import { PresentationModule } from './presentation/presentation.module';
 import { CredentialModule } from './credential/credential.module';
+import { StatusModule } from './status/status.module';
+import { CreditManagerModule } from './credit-manager/credit-manager.module';
+import { UsageModule } from './usage/usage.module';
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule, {
+    cors: true,
+  });
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.use(express.static(path.join(__dirname, '../public')));
@@ -38,7 +43,7 @@ async function bootstrap() {
   const offlineSigner = hidWalletInstance.offlineSigner;
   const nodeRpcEndpoint = walletOptions.hidNodeRPCUrl;
   const nodeRestEndpoint = walletOptions.hidNodeRestUrl;
-  const namespace = 'testnet';
+  const namespace = process.env.HID_NETWORK_NAMESPACE || '';
   const hsSSIdkInstance = new HypersignSSISdk({
     offlineSigner,
     nodeRpcEndpoint,
@@ -124,7 +129,15 @@ async function bootstrap() {
       .build();
 
     const tenantDocuments = SwaggerModule.createDocument(app, tenantDocConfig, {
-      include: [DidModule, SchemaModule, CredentialModule, PresentationModule], // don't include, say, BearsModule
+      include: [
+        DidModule,
+        SchemaModule,
+        CredentialModule,
+        PresentationModule,
+        StatusModule,
+        CreditManagerModule,
+        UsageModule,
+      ], // don't include, say, BearsModule
     });
 
     const tenantOptions = {
@@ -145,19 +158,6 @@ async function bootstrap() {
     `Server running on http://localhost:${process.env.PORT}`,
     'Bootstrap',
   );
-  setInterval(async () => await checkEdv(), 120000);
-}
-
-async function checkEdv() {
-  try {
-    const resp = await fetch(process.env.EDV_BASE_URL + '/api');
-
-    if (resp.status == 200) {
-      process.env.EDV_STATUS = 'UP';
-    }
-  } catch (error) {
-    process.env.EDV_STATUS = 'DOWN';
-  }
 }
 
 bootstrap();

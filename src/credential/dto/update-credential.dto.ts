@@ -11,7 +11,7 @@ export enum Status {
 
 export enum Namespace {
   testnet = 'testnet',
-  // mainnet = '',
+  mainnet = '',
 }
 export class UpdateCredentialDto {
   @ApiProperty({
@@ -52,7 +52,5 @@ export class UpdateCredentialDto {
     example: 'did:hid:testnet:........#key-${idx}',
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @IsNotEmpty()
   verificationMethodId: string;
 }

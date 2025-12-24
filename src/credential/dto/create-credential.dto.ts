@@ -10,6 +10,7 @@ import {
   ValidateIf,
   ArrayNotEmpty,
   IsEnum,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
@@ -18,9 +19,59 @@ import { IsSchemaId } from 'src/utils/customDecorator/schemaId.deceorator';
 import { IsVcId } from 'src/utils/customDecorator/vc.decorator';
 import { subjectDID } from 'src/utils/customDecorator/SubjectDid.decorator';
 
+export class ResolveCredentialMetadata {
+  @ApiProperty({
+    name: 'credentialId',
+    description: 'credentialId of credential',
+    example: 'vc:hid:testnet:z6MkqexphEhpi9jKZi8XLYiwCEsSWMdUt6YzjCfqdxKecJXM',
+  })
+  @IsString()
+  credentialId: string;
+
+  @ApiProperty({
+    name: 'type',
+    description: 'schema type of credential',
+    example: '{ schemaId, schemaType }',
+  })
+  @IsObject()
+  @IsOptional()
+  type?: object;
+
+  @ApiProperty({
+    name: 'issuerDid',
+    description: 'issuerDid  of credential',
+    example: 'did:hid:testnet:asdasd',
+  })
+  @IsString()
+  issuerDid: string;
+
+  @ApiProperty({
+    name: 'persist',
+    description:
+      'return credentialDocument if persist is set to true at the time of issuing credential',
+    example: true,
+  })
+  persist: boolean;
+
+  @ApiProperty({
+    name: 'registerCredentialStatus',
+    description: 'if crendetialstatus was sent to blockchain',
+    example: true,
+  })
+  registerCredentialStatus: boolean;
+
+  @ApiProperty({
+    name: 'transactionStatus',
+    description: 'transactionStatus of credential',
+    required: false,
+  })
+  @IsOptional()
+  @IsObject()
+  transactionStatus: object;
+}
 export enum Namespace {
   testnet = 'testnet',
-  // mainnet = '',
+  mainnet = '',
 }
 export class CreateCredentialDto {
   @ApiProperty({
@@ -110,8 +161,6 @@ export class CreateCredentialDto {
     example: 'did:hid:testnet:........#key-${idx}',
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @IsNotEmpty()
   verificationMethodId: string;
 
   @ApiProperty({
@@ -189,14 +238,15 @@ export class CredentialProof {
   })
   @IsString()
   created: string;
+
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification id using which credential has signed',
     example: 'did:hid:testnet:...............#key-${id}',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   verificationMethod: string;
+
   @ApiProperty({
     name: 'proofPurpose',
     description: '',
@@ -399,12 +449,13 @@ export class CreateCredentialResponse {
     type: CredStatus,
   })
   credentialStatus: CredStatus;
+
   @ApiProperty({
-    name: 'persist',
-    description: 'Define whether to store cred or ust store its meta',
-    example: true,
+    name: 'metadata',
+    description: 'metadata for this credential',
   })
-  persist: boolean;
+  @IsOptional()
+  metadata?: ResolveCredentialMetadata;
 }
 
 export class ResolvedCredentialStatus extends CredStatus {
@@ -448,16 +499,9 @@ export class ResolveCredential {
   @ValidateNested({ each: true })
   credentialStatus: ResolvedCredentialStatus;
   @ApiProperty({
-    name: 'persist',
-    description:
-      'return credentialDocument if persist is set to true at the time of issuing credential',
-    example: true,
+    name: 'metadata',
+    description: 'metadata for this credential',
   })
-  persist: boolean;
-  @ApiProperty({
-    description: 'If set true then return credential Document also',
-    name: 'retrieveCredential',
-    example: true,
-  })
-  retrieveCredential: boolean;
+  @IsOptional()
+  metadata?: ResolveCredentialMetadata;
 }

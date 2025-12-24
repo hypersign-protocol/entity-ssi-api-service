@@ -16,9 +16,22 @@ import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { schemaProviders } from './providers/schema.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
 import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
+import { StatusService } from 'src/status/status.service';
+import { StatusModule } from 'src/status/status.module';
+import { TxnStatusRepository } from 'src/status/repository/status.repository';
+import { statusProviders } from 'src/status/providers/registration-status.provider';
+import { CreditManagerModule } from 'src/credit-manager/credit-manager.module';
+import { AppLoggerMiddleware } from 'src/utils/interceptor/http-interceptor';
+import { LogModule } from 'src/log/log.module';
 
 @Module({
-  imports: [DidModule, TxSendModuleModule],
+  imports: [
+    DidModule,
+    TxSendModuleModule,
+    StatusModule,
+    CreditManagerModule,
+    LogModule,
+  ],
   controllers: [SchemaController],
   providers: [
     SchemaService,
@@ -26,8 +39,11 @@ import { TxSendModuleModule } from 'src/tx-send-module/tx-send-module.module';
     DidService,
     HidWalletService,
     SchemaRepository,
+    StatusService,
+    TxnStatusRepository,
     ...databaseProviders,
     ...schemaProviders,
+    ...statusProviders,
   ],
   exports: [SchemaModule],
 })
@@ -43,5 +59,6 @@ export class SchemaModule implements NestModule {
         { path: 'schema/:schemaId', method: RequestMethod.GET },
       )
       .forRoutes(SchemaController);
+    consumer.apply(AppLoggerMiddleware).forRoutes(SchemaController);
   }
 }

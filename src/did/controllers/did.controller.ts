@@ -22,7 +22,11 @@ import {
   TxnHash,
   CreateDidResponse,
 } from '../dto/create-did.dto';
-import { UpdateDidDto, ResolvedDid } from '../dto/update-did.dto';
+import {
+  UpdateDidDto,
+  ResolvedDid,
+  UpdateDidResp,
+} from '../dto/update-did.dto';
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiNotFoundResponse,
@@ -52,15 +56,20 @@ import { AtLeastOneParamPipe } from 'src/utils/Pipes/atleastOneParam.pipe';
 import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
 import { SignDidDto, SignedDidDocument } from '../dto/sign-did.dto';
 import { VerifyDidDocResponseDto, VerifyDidDto } from '../dto/verify-did.dto';
+import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
+import { AccessGuard } from 'src/utils/guards/access.gaurd';
+import { Access } from 'src/utils/customDecorator/access.decorator';
+import { ACCESS_TYPES } from 'src/credit-manager/utils';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), ReduceCreditGuard, AccessGuard)
 export class DidController {
   constructor(private readonly didService: DidService) {}
 
   @UsePipes(new ValidationPipe({ transform: true }))
+  @Access(ACCESS_TYPES.READ_DID)
   @Get()
   @ApiOkResponse({
     description: 'DID List',
@@ -104,7 +113,7 @@ export class DidController {
 
     return this.didService.getDidList(appDetail, pageOption);
   }
-
+  @Access(ACCESS_TYPES.READ_DID)
   @Get('resolve/:did')
   @ApiOkResponse({
     description: 'DID Resolved',
@@ -136,6 +145,7 @@ export class DidController {
       forbidNonWhitelisted: true,
     }),
   )
+  @Access(ACCESS_TYPES.WRITE_DID)
   @Post('create')
   @ApiCreatedResponse({
     description: 'DID Created',
@@ -210,7 +220,7 @@ export class DidController {
         return classToPlain(response, { excludePrefixes: ['transactionHash'] });
     }
   }
-
+  @Access(ACCESS_TYPES.WRITE_DID)
   @Post('/addVerificationMethod')
   @ApiOkResponse({
     description: 'Added vm to Did Document',
@@ -241,7 +251,7 @@ export class DidController {
     Logger.log('addVerificationMethod() method: starts', 'DidController');
     return this.didService.addVerificationMethod(addVm);
   }
-
+  @Access(ACCESS_TYPES.WRITE_DID)
   @Post('/auth/sign')
   @ApiOkResponse({
     description: 'DidDocument is signed successfully',
@@ -272,6 +282,7 @@ export class DidController {
     Logger.log('SignDidDocument() method: starts', 'DidController');
     return this.didService.SignDidDocument(signDidDocDto, req.user);
   }
+  @Access(ACCESS_TYPES.VERIFY_DID_SIGNATURE)
   @Post('/auth/verify')
   @ApiOkResponse({
     description: 'DidDocument is verified successfully',
@@ -321,6 +332,7 @@ export class DidController {
     description: 'Origin as you set in application cors',
     required: false,
   })
+  @Access(ACCESS_TYPES.WRITE_DID)
   @Post('/register')
   @UsePipes(ValidationPipe)
   register(
@@ -333,12 +345,11 @@ export class DidController {
     const appDetail = req.user;
     return this.didService.register(registerDidDto, appDetail);
   }
-
+  @Access(ACCESS_TYPES.WRITE_DID)
   @Patch()
-  @UsePipes(ValidationPipe)
   @ApiOkResponse({
     description: 'DID Updated',
-    type: TxnHash,
+    type: UpdateDidResp,
   })
   @ApiBadRequestResponse({
     status: 400,
@@ -360,6 +371,8 @@ export class DidController {
     description: 'Origin as you set in application cors',
     required: false,
   })
+  @UsePipes(ValidationPipe)
+  @UsePipes(new AtLeastOneParamPipe(['name', 'didDocument']))
   updateDid(
     @Headers('Authorization') authorization: string,
     @Req() req: any,
@@ -390,6 +403,7 @@ export class DidController {
     required: false,
   })
   @UsePipes(ValidationPipe)
+  @Access(ACCESS_TYPES.WRITE_DID)
   @Post('register/v2')
   registerV2(
     @Headers('Authorization') authorization: string,

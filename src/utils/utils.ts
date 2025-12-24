@@ -15,7 +15,6 @@ import {
   ArgumentsHost,
   HttpStatus,
 } from '@nestjs/common';
-import { Did } from 'hs-ssi-sdk';
 
 export const existDir = (dirPath) => {
   if (!dirPath) throw new Error('Directory path undefined');
@@ -116,3 +115,42 @@ export async function generateAppId(length = 36) {
     .toString('hex')
     .slice(0, length);
 }
+export enum StorageType {
+  KEYSTORAGE = 'KEYSTORAGE',
+  DATASTORAGE = 'DATASTORAGE',
+}
+export enum RMethods {
+  'GET' = 'GET',
+  'POST' = 'POST',
+  'PUT' = 'PUT',
+  'PATCH' = 'PATCH',
+  'DELETE' = 'DELETE',
+}
+export enum ATTESTAION_TYPE {
+  REGISTER_CREDENTIAL = 'REGISTER_CREDENTIAL',
+  REGISTER_DID = 'REGISTER_DID',
+  REGISTER_SCHEMA = 'REGISTER_SCHEMA',
+  UPDATE_DID = 'UPDATE_DID',
+  UPDATE_CREDENTIAL = 'UPDATE_CREDENTIAL',
+}
+
+export const CREDIT_COSTS = {
+  API: {
+    GET: 1,
+    POST: 5,
+    PATCH: 3,
+    PUT: 3,
+    DELETE: 4,
+  },
+  STORAGE: {
+    KEYSTORAGE: 2,
+    DATASTORAGE: 4,
+  },
+  ATTESTATION: {
+    REGISTER_CREDENTIAL: 50,
+    REGISTER_DID: 50,
+    REGISTER_SCHEMA: 50,
+    UPDATE_DID: 50,
+    UPDATE_CREDENTIAL: 50,
+  },
+};

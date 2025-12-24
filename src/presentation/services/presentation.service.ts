@@ -21,12 +21,16 @@ import {
 } from 'hs-ssi-sdk';
 import { ConfigService } from '@nestjs/config';
 import { HidWalletService } from 'src/hid-wallet/services/hid-wallet.service';
-import { DidRepository } from 'src/did/repository/did.repository';
+import {
+  DidMetaDataRepo,
+  DidRepository,
+} from 'src/did/repository/did.repository';
 import { VerifyPresentationDto } from '../dto/verify-presentation.dto';
 import { getAppVault } from '../../utils/app-vault-service';
 import { generateAppId } from 'src/utils/utils';
 import { VerificationMethodRelationships } from 'hs-ssi-sdk/build/libs/generated/ssi/client/enums';
 import { DidSSIService } from 'src/did/services/did.ssi.service';
+import { DidService } from 'src/did/services/did.service';
 @Injectable()
 export class PresentationService {
   constructor(
@@ -200,6 +204,8 @@ export class PresentationRequestService {
   constructor(
     private readonly presentationtempleteReopsitory: PresentationTemplateRepository,
     private readonly didRepositiory: DidRepository,
+    private readonly didMetaRepositiory: DidMetaDataRepo,
+    private readonly didService: DidService,
     private readonly config: ConfigService,
     private readonly hidWallet: HidWalletService,
     private readonly didSSIService: DidSSIService,
@@ -295,6 +301,11 @@ export class PresentationRequestService {
     const { didDocument } = await hypersignDID.resolve({
       did: holderDid,
     });
+    if (Object.keys(didDocument).length == 0) {
+      const did = await this.didService.resolveDid(appDetail, holderDid);
+      Object.assign(didDocument, did.didDocument);
+    }
+
     const verificationMethodIdforAssert =
       verificationMethodId || didDocument.assertionMethod[0];
     Logger.log(
@@ -315,9 +326,11 @@ export class PresentationRequestService {
     // Holder Identity: - used for authenticating presentation
     const { edvId, kmsId } = appDetail;
     const appVault = await getAppVault(kmsId, edvId);
+
     const vmWithAssertion = didDocument.verificationMethod.find(
       (vm) => vm.id === verificationMethodIdforAssert,
     );
+
     const { mnemonic: holderMnemonic } = await appVault.getDecryptedDocument(
       didInfo.kmsId,
     );
@@ -325,12 +338,13 @@ export class PresentationRequestService {
     let hypersignDid;
     let privateKeyMultibase;
     let signedVerifiablePresentation;
+
     if (
       vmWithAssertion &&
       vmWithAssertion.type === IKeyType.BabyJubJubKey2021
     ) {
       hypersignDid = await this.didSSIService.initiateHyperSignBJJDidOffline(
-        'testnet',
+        this.config.get('HID_NETWORK_NAMESPACE') || '',
       );
       const keys = await hypersignDid.generateKeys({
         mnemonic: holderMnemonic,
@@ -340,11 +354,14 @@ export class PresentationRequestService {
         'createPresentation() method: before calling hypersignVP.sign for bjj',
         'PresentationRequestService',
       );
+
       signedVerifiablePresentation = await hypersignVP.bjjVp.sign({
         presentation: unsignedverifiablePresentation as IVerifiablePresentation,
-        holderDid,
+        // holderDid,
+        holderDidDocSigned: didDocument as any,
         verificationMethodId: verificationMethodIdforAssert,
         challenge,
+        domain,
         privateKeyMultibase,
       });
     } else {
@@ -358,7 +375,9 @@ export class PresentationRequestService {
       );
       signedVerifiablePresentation = await hypersignVP.sign({
         presentation: unsignedverifiablePresentation as IVerifiablePresentation,
-        holderDid,
+        // holderDid,
+        holderDidDocSigned: didDocument as any,
+        domain,
         verificationMethodId: verificationMethodIdforAssert,
         challenge,
         privateKeyMultibase,
@@ -371,7 +390,7 @@ export class PresentationRequestService {
     return { presentation: signedVerifiablePresentation };
   }
 
-  async verifyPresentation(presentations: VerifyPresentationDto) {
+  async verifyPresentation(presentations: VerifyPresentationDto, appDetail) {
     Logger.log(
       'verifyPresentation() method: starts....',
       'PresentationRequestService',
@@ -393,11 +412,17 @@ export class PresentationRequestService {
     const issuerDid = presentation['verifiableCredential'][0]['issuer'];
     const challenge = presentation['proof']['challenge'];
     const type = presentation['proof']['type'];
+    const domain = presentation['proof']['domain'];
 
     Logger.log(
       'verifyPresentation() method:before calling  hypersignVP.verify',
       'PresentationRequestService',
     );
+    const holderDidResolved = await this.didService.resolveDid(
+      appDetail,
+      holderDid,
+    );
+
     let verifiedPresentationDetail;
     const holderVerificationMethodId =
       presentations.holderVerificationMethodId || holderDid + '#key-1';
@@ -407,16 +432,19 @@ export class PresentationRequestService {
       verifiedPresentationDetail = await hypersignVP.bjjVp.verify({
         signedPresentation: presentation as any,
         issuerDid,
-        holderDid,
+        holderDidDocSigned: holderDidResolved.didDocument,
         holderVerificationMethodId: holderVerificationMethodId,
         issuerVerificationMethodId: issuerVerificationMethodId,
         challenge,
+        domain,
       });
     } else {
+      // holderDidResolved.didDocument.verificationMethod[0].publicKeyMultibase='z6MkuX5ydorS9Hyf6J1Yu4tKPvzLwUpe6TVfATXqn17SvJA4'
       verifiedPresentationDetail = await hypersignVP.verify({
         signedPresentation: presentation as any,
         issuerDid,
-        holderDid,
+        domain,
+        holderDidDocSigned: holderDidResolved.didDocument,
         holderVerificationMethodId: holderVerificationMethodId,
         issuerVerificationMethodId: issuerVerificationMethodId,
         challenge,

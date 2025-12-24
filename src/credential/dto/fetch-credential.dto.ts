@@ -1,7 +1,21 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsNumber, IsString } from 'class-validator';
-import { Credential } from '../schemas/credntial.schema';
+import { IsArray, IsNumber, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 
+export class CredentialData {
+  @ApiProperty({
+    name: 'credentialId',
+    description: 'Id of the credential',
+    example: 'vc:hid:testnet:............',
+  })
+  credentialId: string;
+  @ApiProperty({
+    name: 'createdAt',
+    description: 'Time at which document is created',
+    example: '2025-11-19T07:47:15.632Z',
+  })
+  createdAt: string;
+}
 export class GetCredentialList {
   @ApiProperty({
     description: 'totalCount',
@@ -12,11 +26,11 @@ export class GetCredentialList {
 
   @ApiProperty({
     description: 'data',
-    type: Credential,
-    example: ['vc:hid:testnet:............'],
+    type: CredentialData,
     isArray: true,
   })
-  @IsString()
+  @Type(() => CredentialData)
+  @ValidateNested()
   @IsArray()
-  data: Array<Credential['credentialId']>;
+  data: CredentialData[];
 }

@@ -24,9 +24,11 @@ import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware
 import { TrimMiddleware } from 'src/utils/middleware/trim.middleware';
 import { presentationTemplateProviders } from './providers/presentation.provider';
 import { databaseProviders } from '../mongoose/tenant-mongoose-connections';
+import { AppLoggerMiddleware } from 'src/utils/interceptor/http-interceptor';
+import { LogModule } from 'src/log/log.module';
 
 @Module({
-  imports: [DidModule],
+  imports: [DidModule, LogModule],
   controllers: [PresentationTempleteController, PresentationController],
   providers: [
     PresentationService,
@@ -52,6 +54,9 @@ export class PresentationModule implements NestModule {
         },
         { path: 'presentation/template', method: RequestMethod.DELETE },
       )
+      .forRoutes(PresentationTempleteController, PresentationController);
+    consumer
+      .apply(AppLoggerMiddleware)
       .forRoutes(PresentationTempleteController, PresentationController);
   }
 }

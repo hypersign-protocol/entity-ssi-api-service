@@ -27,9 +27,12 @@ spec:
           failureThreshold: 3
 
         resources:
-          limits:
+          requests:
             memory: "2Gi"
-            cpu: "1000m"
+            cpu: "4000m"
+          limits:
+            memory: "4Gi"
+            cpu: "8000m"
         ports:
         - containerPort: __PORT__
         env:
@@ -59,8 +62,12 @@ spec:
           value: __JWT_SECRET__
         - name: GLOBAL_TXN_CONTROLLER_QUEUE
           value: __GLOBAL_TXN_CONTROLLER_QUEUE__
+        - name: Tx_Query_API
+          value: __Tx_Query_API__
         - name: RABBIT_MQ_URI
           value: __RABBIT_MQ_URI__
+        - name: NODE_ENV
+          value: __NODE_ENV__
         - name: WHITELISTED_CORS
           value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://api.entity-test.hypersign.id','https://wallet-prajna.hypersign.id']"
         volumeMounts:
@@ -87,6 +94,7 @@ spec:
   - port: __PORT__
     targetPort: __PORT__
     protocol: TCP
+
 # ---
 # apiVersion: apps/v1
 # kind: Deployment
@@ -132,6 +140,3 @@ spec:
 #     - port: 8080
 #       targetPort: 8080
 #       protocol: TCP
-
-
-

@@ -350,9 +350,13 @@ export class PresentationController {
   verify(
     @Headers('Authorization') authorization: string,
     @Body() presentation: VerifyPresentationDto,
+    @Req() req,
   ) {
     Logger.log('verify() method: starts', 'PresentationController');
 
-    return this.presentationRequestService.verifyPresentation(presentation);
+    return this.presentationRequestService.verifyPresentation(
+      presentation,
+      req.user,
+    );
   }
 }

@@ -21,6 +21,7 @@ import { RegisterSchemaDto } from '../dto/register-schema.dto';
 import { Namespace } from 'src/did/dto/create-did.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
+import { StatusService } from 'src/status/status.service';
 
 @Injectable({ scope: Scope.REQUEST })
 export class SchemaService {
@@ -31,6 +32,7 @@ export class SchemaService {
     private readonly hidWallet: HidWalletService,
     private readonly didRepositiory: DidRepository,
     private readonly txnService: TxSendModuleService,
+    private readonly statusService: StatusService,
   ) {}
 
   async checkAllowence(address) {
@@ -123,6 +125,7 @@ export class SchemaService {
           generatedSchema,
           signedSchema.proof,
           appMenemonic,
+          appDetail,
         );
       } else {
         registeredSchema = await hypersignSchema.register({
@@ -201,15 +204,36 @@ export class SchemaService {
       'SchemaService',
     );
 
-    const resolvedSchema = await hypersignSchema.resolve({ schemaId });
-    if (resolvedSchema == undefined) {
+    const statusResponse = await this.statusService.findBySsiId(schemaId);
+    if (statusResponse) {
+      const firstResponse = statusResponse[0];
+      if (firstResponse && firstResponse.data) {
+        if (firstResponse.data.findIndex((x) => x['status'] != 0) >= 0) {
+          throw new BadRequestException([firstResponse]);
+        }
+      }
+    }
+
+    let resolvedSchema;
+    try {
+      resolvedSchema = await hypersignSchema.resolve({ schemaId });
+    } catch (e) {
+      Logger.error(e);
+    }
+    if (
+      !resolvedSchema ||
+      Object.keys(resolvedSchema).length == 0 ||
+      !resolvedSchema.schema
+    ) {
       Logger.error(
-        'resolveSchema() method: Error whilt resolving schema',
+        'resolveSchema() method: Error whilt resolving schema schemaId' +
+          schemaId,
         'SchemaService',
       );
-      throw new NotFoundException([
-        `${schemaId} could not resolve this schema`,
-      ]);
+      const tempResolvedDid = {
+        id: schemaId,
+      };
+      return tempResolvedDid;
     }
 
     try {
@@ -251,7 +275,10 @@ export class SchemaService {
     }
 
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = Namespace.testnet;
+    const namespace =
+      (this.config.get<Namespace>('HID_NETWORK_NAMESPACE') as Namespace) ??
+      Namespace.mainnet;
+    Logger.log('registerSchema() method: initialising hypersignSchema');
     Logger.log('registerSchema() method: initialising hypersignSchema');
 
     const hypersignSchema = await this.schemaSSIservice.initiateHypersignSchema(
@@ -270,6 +297,7 @@ export class SchemaService {
           registerSchemaDto.schemaDocument,
           registerSchemaDto.schemaProof,
           appMenemonic,
+          appDetail,
         );
       } else {
         registeredSchema = await hypersignSchema.register({

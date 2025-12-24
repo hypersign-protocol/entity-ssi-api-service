@@ -13,7 +13,9 @@ export enum RegistrationStatus {
   COMPLETED = 'COMPLETED',
   UNREGISTRED = 'UNREGISTRED',
 }
-@Schema()
+@Schema({
+  timestamps: true,
+})
 export class Did {
   @ApiHideProperty()
   @IsOptional()

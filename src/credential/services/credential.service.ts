@@ -4,7 +4,10 @@ import {
   Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateCredentialDto } from '../dto/create-credential.dto';
+import {
+  CreateCredentialDto,
+  ResolveCredentialMetadata,
+} from '../dto/create-credential.dto';
 import { UpdateCredentialDto } from '../dto/update-credential.dto';
 import { ConfigService } from '@nestjs/config';
 import { CredentialSSIService } from './credential.ssi.service';
@@ -23,7 +26,9 @@ import {
 } from '../dto/register-credential.dto';
 import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
-
+import * as NodeCache from 'node-cache';
+import { StatusService } from 'src/status/status.service';
+const myCache = new NodeCache();
 @Injectable()
 export class CredentialService {
   constructor(
@@ -33,6 +38,7 @@ export class CredentialService {
     private credentialRepository: CredentialRepository,
     private readonly didRepositiory: DidRepository,
     private readonly txnService: TxSendModuleService,
+    private readonly statusService: StatusService,
   ) {}
 
   async checkAllowence(address) {
@@ -112,7 +118,16 @@ export class CredentialService {
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
       const hypersignDid = new HypersignDID();
-      const { didDocument } = await hypersignDid.resolve({ did: issuerDid });
+      let didDocument;
+      if (myCache.has(issuerDid)) {
+        didDocument = myCache.get(issuerDid);
+        console.log('Getting from Cache');
+      } else {
+        const resp = await hypersignDid.resolve({ did: issuerDid });
+        didDocument = resp.didDocument;
+        myCache.set(issuerDid, didDocument);
+        Logger.log('Setting Cache');
+      }
       const verificationMethod = didDocument.verificationMethod.find(
         (vm) => vm.id === verificationMethodId,
       );
@@ -192,6 +207,7 @@ export class CredentialService {
       } = await hypersignVC.issue({
         credential,
         issuerDid,
+        issuerDidDoc: didDocument,
         verificationMethodId,
         privateKeyMultibase,
         registerCredential: false,
@@ -233,7 +249,7 @@ export class CredentialService {
         'create() method: before creating credential doc in db',
         'CredentialService',
       );
-      await this.credentialRepository.create({
+      const credentialDetail = await this.credentialRepository.create({
         appId: appDetail.appId,
         credentialId: signedCredential.id,
         issuerDid,
@@ -242,14 +258,25 @@ export class CredentialService {
         transactionHash: credentialStatusRegistrationResult
           ? credentialStatusRegistrationResult.transactionHash
           : '',
-        type: signedCredential.type[1], // TODO : MAYBE REMOVE HARDCODING MAYBE NOT
+        type: { schemaType: signedCredential.type[1], schemaId }, // TODO : MAYBE REMOVE HARDCODING MAYBE NOT
+        registerCredentialStatus: registerCredentialStatus
+          ? registerCredentialStatus
+          : false,
       });
       Logger.log('create() method: ends....', 'CredentialService');
+
+      const metadata = {
+        credentialId: credentialDetail.credentialId,
+        persist: credentialDetail.persist,
+        type: credentialDetail.type,
+        issuerDid: credentialDetail.issuerDid,
+        registerCredentialStatus: credentialDetail.registerCredentialStatus,
+      } as ResolveCredentialMetadata;
 
       return {
         credentialDocument: signedCredential,
         credentialStatus: credStatusTemp,
-        persist,
+        metadata,
       };
     } catch (e) {
       throw new BadRequestException([e.message]);
@@ -305,22 +332,57 @@ export class CredentialService {
       'resolveCredential() method: before initialising HypersignVerifiableCredential',
       'CredentialService',
     );
-    const hypersignCredential = new HypersignVerifiableCredential();
-    let credentialStatus;
-    try {
-      credentialStatus = await hypersignCredential.resolveCredentialStatus({
-        credentialId,
-      });
-    } catch (e) {
-      credentialStatus = undefined;
+
+    const metadata = {
+      credentialId: credentialDetail.credentialId,
+      persist: credentialDetail.persist,
+      type: credentialDetail.type,
+      issuerDid: credentialDetail.issuerDid,
+      registerCredentialStatus: credentialDetail.registerCredentialStatus,
+    } as ResolveCredentialMetadata;
+    let credentialStatus = undefined;
+    // If user had registered the credential on the blockchain
+    // Only then we will go ahead with credential status retrival
+    const shouldRetriveCredential = credentialDetail.registerCredentialStatus
+      ? credentialDetail.registerCredentialStatus
+      : true; // making default true for backwards compatibility
+    if (shouldRetriveCredential) {
+      /// First check this transaction was successful in lcoal db or there was some error
+      const statusResponse = await this.statusService.findBySsiId(credentialId);
+      let wasTransactionSuccess = false;
+      if (statusResponse) {
+        const firstResponse = statusResponse[0];
+        if (
+          firstResponse &&
+          firstResponse.data &&
+          firstResponse.totalCount.length > 0
+        ) {
+          metadata['transactionStatus'] = firstResponse.data;
+          if (firstResponse.data.findIndex((x) => x['status'] == 0) >= 0) {
+            wasTransactionSuccess = true;
+          }
+        }
+      }
+
+      console.log({ wasTransactionSuccess });
+      /// Retrive status from the blockchain only when status = 0, otherwise skip
+      if (wasTransactionSuccess) {
+        try {
+          const hypersignCredential = new HypersignVerifiableCredential();
+          credentialStatus = await hypersignCredential.resolveCredentialStatus({
+            credentialId,
+          });
+        } catch (e) {
+          credentialStatus = undefined;
+        }
+        Logger.log('resolveCredential() method: ends....', 'CredentialService');
+      }
     }
-    Logger.log('resolveCredential() method: ends....', 'CredentialService');
 
     return {
       credentialDocument: credential ? credential : undefined,
       credentialStatus,
-      persist: credentialDetail.persist,
-      retrieveCredential,
+      metadata,
     };
   }
 
@@ -380,8 +442,8 @@ export class CredentialService {
       const appMenemonic = await getAppMenemonic(kmsId);
       const nameSpace = namespace
         ? namespace
-        : this.config.get('NETWORK')
-        ? this.config.get('NETWORK')
+        : this.config.get('HID_NETWORK_NAMESPACE')
+        ? this.config.get('HID_NETWORK_NAMESPACE')
         : namespace;
       if (
         verificationMethod &&
@@ -436,6 +498,7 @@ export class CredentialService {
           updateCredenital?.credentialStatus,
           updateCredenital?.proofValue,
           appMenemonic,
+          appDetail,
         );
       } else {
         updatedCredResult = await hypersignVC.updateCredentialStatus({
@@ -587,8 +650,15 @@ export class CredentialService {
           namespace,
         );
       }
-      if (await this.checkAllowence(address)) {
-        await this.txnService.sendVCTxn(credentialStatus, proof, appMenemonic);
+      Logger.log(`Address: ${address}`);
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
+        await this.txnService.sendVCTxn(
+          credentialStatus,
+          proof,
+          appMenemonic,
+          appDetail,
+        );
       } else {
         registeredVC = await hypersignVC.registerCredentialStatus({
           credentialStatus,

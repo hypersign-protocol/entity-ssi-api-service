@@ -5,117 +5,120 @@ on:
     # branches:
     #   - "master"
     tags:
-      - "[0-9]+.[0-9]+.[0-9]+"
-      - "[0-9]+.[0-9]+.[0-9]-rc.[0-9]+"
+    - "[0-9]+.[0-9]+.[0-9]+"
+    - "[0-9]+.[0-9]+.[0-9]-rc.[0-9]+"
 
 jobs:
   Build:
     runs-on: ubuntu-22.04
     environment: production
     steps:
-      - name: code checkout
-        uses: actions/checkout@v3
-      - name: Set Latest Tag
-        run: echo "LATEST_RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+    - name: code checkout
+      uses: actions/checkout@v3
+    - name: Set Latest Tag
+      run: echo "LATEST_RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
-      - id: "auth"
-        uses: "google-github-actions/auth@v1"
-        with:
-          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
+    - id: "auth"
+      uses: "google-github-actions/auth@v1"
+      with:
+        credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
 
-      - name: install gcloud cli tools
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{secrets.GOOGLE_PROJECT_ID}}
-          service_account_key: ${{secrets.GOOGLE_APPLICATION_CREDENTIALS}}
-          install_components: "gke-gcloud-auth-plugin"
-          export_default_credentials: true
-      - name: "Use gcloud CLI"
-        run: "gcloud info"
+    - name: install gcloud cli tools
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{secrets.GOOGLE_PROJECT_ID}}
+        service_account_key: ${{secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+        install_components: "gke-gcloud-auth-plugin"
+        export_default_credentials: true
+    - name: "Use gcloud CLI"
+      run: "gcloud info"
 
-      - name: "Docker Auth"
-        env:
-          GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
+    - name: "Docker Auth"
+      env:
+        GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
 
-        run: gcloud auth configure-docker $GOOGLE_ARTIFACT_URL
+      run: gcloud auth configure-docker $GOOGLE_ARTIFACT_URL
 
-      - name: "Docker Build and Push"
-        env:
-          GOOGLE_PROJECT_ID: ${{secrets.GOOGLE_PROJECT_ID}}
-          GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
-          GOOGLE_ARTIFACT_REPO: ${{secrets.GOOGLE_ARTIFACT_REPO}}
-        run:
-          docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }} .
+    - name: "Docker Build and Push"
+      env:
+        GOOGLE_PROJECT_ID: ${{secrets.GOOGLE_PROJECT_ID}}
+        GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
+        GOOGLE_ARTIFACT_REPO: ${{secrets.GOOGLE_ARTIFACT_REPO}}
+      run: docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }} .
 
-          docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }}
-      - name: "Docker Build and Push"
-        env:
-          GOOGLE_PROJECT_ID: ${{secrets.GOOGLE_PROJECT_ID}}
-          GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
-          GOOGLE_ARTIFACT_REPO: ${{secrets.GOOGLE_ARTIFACT_REPO}}
-        run:
-          docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/nginx-entity:latest ./nginx/
+        docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }}
+    # - name: "Docker Build and Push"
+    #   env:
+    #     GOOGLE_PROJECT_ID: ${{secrets.GOOGLE_PROJECT_ID}}
+    #     GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
+    #     GOOGLE_ARTIFACT_REPO: ${{secrets.GOOGLE_ARTIFACT_REPO}}
+    #   run:
+    #     docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/nginx-entity:latest ./nginx/
 
-          docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/nginx-entity:latest
+    #     docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/nginx-entity:latest
 
   Deploy:
-    needs: [Build]
+    needs: [ Build ]
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: code checkout
-        uses: actions/checkout@v3
-      - name: Set Latest Tag
-        run: echo "LATEST_RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
+    - name: code checkout
+      uses: actions/checkout@v3
+    - name: Set Latest Tag
+      run: echo "LATEST_RELEASE_TAG=$(git describe --tags --abbrev=0)" >> $GITHUB_ENV
 
-      - id: "auth"
-        uses: "google-github-actions/auth@v1"
-        with:
-          credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
-      - name: install gcloud cli tools
-        uses: google-github-actions/setup-gcloud@v1
-        with:
-          project_id: ${{secrets.GOOGLE_PROJECT_ID}}
-          service_account_key: ${{secrets.GOOGLE_APPLICATION_CREDENTIALS}}
-          install_components: "gke-gcloud-auth-plugin"
-          export_default_credentials: true
-      - name: "Configure kubectl"
-        run: gcloud container clusters get-credentials hypermine-gke --region=asia-south1
-      - name: Replace tags
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__LATEST_RELEASE_TAG__#${{ env.LATEST_RELEASE_TAG }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__PORT__/${{ secrets.PORT }}/g'' {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__BASE_DB_PATH__#${{ secrets.BASE_DB_PATH }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__DB_CONFIG__#${{ secrets.DB_CONFIG }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_RPC__#${{ secrets.HID_NETWORK_RPC }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_API__#${{ secrets.HID_NETWORK_API }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_NAMESPACE__#${{ secrets.HID_NETWORK_NAMESPACE }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_BASE_URL__#${{ secrets.EDV_BASE_URL }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_CONFIG_DIR__#${{ secrets.EDV_CONFIG_DIR }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_DID_FILE_PATH__#${{ secrets.EDV_DID_FILE_PATH }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_KEY_FILE_PATH__#${{ secrets.EDV_KEY_FILE_PATH }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__GLOBAL_TXN_CONTROLLER_QUEUE__#${{ secrets.GLOBAL_TXN_CONTROLLER_QUEUE }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__RABBIT_MQ_URI__#${{ secrets.RABBIT_MQ_URI }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_URL__/${{ secrets.GOOGLE_ARTIFACT_URL }}/g'' {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_REPO__/${{ secrets.GOOGLE_ARTIFACT_REPO }}/g'' {} \;
-      - name: "Replace secrets"
-        run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g'' {} \;
-      - name: "Deploy to GKE"
-        run: kubectl apply -f .deploy/deployment.yaml
+    - id: "auth"
+      uses: "google-github-actions/auth@v1"
+      with:
+        credentials_json: "${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}"
+    - name: install gcloud cli tools
+      uses: google-github-actions/setup-gcloud@v1
+      with:
+        project_id: ${{secrets.GOOGLE_PROJECT_ID}}
+        service_account_key: ${{secrets.GOOGLE_APPLICATION_CREDENTIALS}}
+        install_components: "gke-gcloud-auth-plugin"
+        export_default_credentials: true
+    - name: "Configure kubectl"
+      run: gcloud container clusters get-credentials hypermine-gke-manual --region=asia-south1
+    - name: Replace tags
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__LATEST_RELEASE_TAG__#${{ env.LATEST_RELEASE_TAG }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__PORT__/${{ secrets.PORT }}/g'' {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__BASE_DB_PATH__#${{ secrets.BASE_DB_PATH }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__DB_CONFIG__#${{ secrets.DB_CONFIG }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_RPC__#${{ secrets.HID_NETWORK_RPC }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_API__#${{ secrets.HID_NETWORK_API }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__HID_NETWORK_NAMESPACE__#${{ secrets.HID_NETWORK_NAMESPACE }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_BASE_URL__#${{ secrets.EDV_BASE_URL }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_CONFIG_DIR__#${{ secrets.EDV_CONFIG_DIR }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_DID_FILE_PATH__#${{ secrets.EDV_DID_FILE_PATH }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__EDV_KEY_FILE_PATH__#${{ secrets.EDV_KEY_FILE_PATH }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__GLOBAL_TXN_CONTROLLER_QUEUE__#${{ secrets.GLOBAL_TXN_CONTROLLER_QUEUE }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__RABBIT_MQ_URI__#${{ secrets.RABBIT_MQ_URI }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__Tx_Query_API__#${{ secrets.Tx_Query_API }}#" {} \;  
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_URL__/${{ secrets.GOOGLE_ARTIFACT_URL }}/g'' {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_REPO__/${{ secrets.GOOGLE_ARTIFACT_REPO }}/g'' {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__NODE_ENV__#${{ secrets.NODE_ENV }}#" {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g'' {} \;
+    - name: "Deploy to GKE"
+      run: kubectl apply -f .deploy/deployment.yaml
