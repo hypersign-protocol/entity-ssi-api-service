@@ -5,7 +5,7 @@ import {
 } from 'class-validator';
 
 const VERIFICATION_METHOD_ID_REGEX =
-  /^did:hid:(testnet:)?[a-zA-Z0-9]{32,}#[a-zA-Z0-9\-]+$/;
+  /^did:hid:(?:[-a-zA-Z0-9]{1,10}:)?(?:[-a-z0-9]{3,8}:[-_a-zA-Z0-9]{1,32}:[-.%a-zA-Z0-9]{1,128}|[A-Za-z0-9.-]+)(?:#[A-Za-z0-9.-]+)?$/;
 
 export function ValidateVerificationMethodId(
   validationOptions?: ValidationOptions,
