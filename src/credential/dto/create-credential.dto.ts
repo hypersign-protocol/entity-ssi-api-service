@@ -71,7 +71,7 @@ export class ResolveCredentialMetadata {
 }
 export enum Namespace {
   testnet = 'testnet',
-  // mainnet = '',
+  mainnet = '',
 }
 export class CreateCredentialDto {
   @ApiProperty({
@@ -161,8 +161,6 @@ export class CreateCredentialDto {
     example: 'did:hid:testnet:........#key-${idx}',
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @IsNotEmpty()
   verificationMethodId: string;
 
   @ApiProperty({
@@ -240,14 +238,15 @@ export class CredentialProof {
   })
   @IsString()
   created: string;
+
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification id using which credential has signed',
     example: 'did:hid:testnet:...............#key-${id}',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   verificationMethod: string;
+
   @ApiProperty({
     name: 'proofPurpose',
     description: '',

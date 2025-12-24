@@ -22,6 +22,7 @@ import {
 import {
   createCreditResponse,
   ActivateCredtiResponse,
+  CreditManagerRequestDto,
 } from '../dto/create-credit-manager.dto';
 import { AllExceptionsFilter } from 'src/utils/utils';
 import {
@@ -60,12 +61,12 @@ export class CreditManagerController {
   })
   @Access(ACCESS_TYPES.WRITE_CREDIT)
   @Post()
-  AddNewCreditDetail(@Req() req) {
+  AddNewCreditDetail(@Body() body: CreditManagerRequestDto, @Req() req) {
     Logger.log(
       'AddNewCreditDetail() method to add credit detail',
       'CreditManagerController',
     );
-    return this.creditManagerService.addCreditDetail(req.creditDetail);
+    return this.creditManagerService.addCreditDetail(body, req.creditDetail);
   }
   @ApiBearerAuth('Authorization')
   @UseGuards(AuthGuard('jwt'), AccessGuard)

@@ -6,17 +6,19 @@ import {
 } from '@nestjs/common';
 import {
   CreateCreditManagerDto,
+  CreditManagerRequestDto,
   ValidityPeriodUnit,
 } from '../dto/create-credit-manager.dto';
 import { CreditManagerRepository } from '../repository/credit-manager.repository';
 import { Status } from '../schema/credit-manager.schema';
-import { constant } from '../utils';
-import { urlSanitizer } from 'src/utils/sanitizeUrl.validator';
 
 @Injectable()
 export class CreditService {
   constructor(private readonly creditRepository: CreditManagerRepository) {}
-  async addCreditDetail(createCreditManagerDto: CreateCreditManagerDto) {
+  async addCreditDetail(
+    body: CreditManagerRequestDto,
+    createCreditManagerDto: CreateCreditManagerDto,
+  ) {
     Logger.log('addCreditDetail() method starts....', 'CreditService');
     const ifActivePlanExists =
       await this.creditRepository.findParticularCreditDetail({
@@ -30,15 +32,12 @@ export class CreditService {
     );
     createCreditManagerDto.validityDuration = validityPeriodInDays;
     Logger.debug(`Credit status:${status}`);
-    let grantDetail;
+    const grantDetail = body;
     if (status === 'Active') {
       expiryTime = this.calculateExpiryTime(
         createCreditManagerDto.validityDuration,
       );
-      grantDetail = await this.grantAdminAllowanceForTxFee(
-        createCreditManagerDto.serviceId,
-      );
-      grantDetail['credit']['used'] = 0;
+      // TOOD need to validate if authz grant was given to that wallet addres on blockchain.
     }
     const newCreditDetail = {
       ...createCreditManagerDto,
@@ -85,15 +84,6 @@ export class CreditService {
         creditDocument.validityDuration,
       );
       paramsToUpdate['expiresAt'] = expiresAt;
-
-      const grantDetail = await this.grantAdminAllowanceForTxFee(
-        creditDocument.serviceId,
-      );
-      if (grantDetail) {
-        grantDetail['credit']['used'] = 0;
-        (paramsToUpdate['credit'] = grantDetail?.credit),
-          (paramsToUpdate['creditScope'] = grantDetail?.creditScope);
-      }
     }
     return this.creditRepository.updateCreditDetail(
       { _id: creditId },
@@ -236,12 +226,4 @@ export class CreditService {
     }
   }
 
-  async grantAdminAllowanceForTxFee(appId) {
-    const url = `${urlSanitizer(constant.AUTHZ_URL, false)}/${appId}`;
-    const data = await fetch(url);
-    if (data && data.ok) {
-      const resp = await data.json();
-      return resp;
-    }
-  }
 }

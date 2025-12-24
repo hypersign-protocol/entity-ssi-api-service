@@ -43,7 +43,7 @@ export class DidService {
     private readonly didSSIService: DidSSIService,
     private readonly config: ConfigService,
     private readonly txnService: TxSendModuleService,
-  ) { }
+  ) {}
 
   async checkAllowence(address) {
     const url =
@@ -100,22 +100,22 @@ export class DidService {
     if (!address) {
       throw new BadRequestException([
         'options.walletAddress is not passed , required for keyType ' +
-        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
       ]);
     }
     if (!chainId) {
       throw new BadRequestException([
         'options.chainId is not passed , required for keyType ' +
-        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
       ]);
     }
 
     if (register === true) {
       throw new BadRequestException([
         'options.register is true for keyType ' +
-        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
         IKeyType.EcdsaSecp256k1RecoveryMethod2020 +
-        ' doesnot support register without signature being passed',
+          ' doesnot support register without signature being passed',
         'options.register:false is strongly recomended',
       ]);
     }
@@ -275,7 +275,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-          userCredential.walletAddress,
+            userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
@@ -432,7 +432,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-          userCredential.walletAddress,
+            userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
@@ -498,9 +498,9 @@ export class DidService {
 
     // TODO: Once we implemnt authz, we can ask user' to do this tranction
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     const DidInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: registerDidDto.didDocument['id'],
@@ -582,7 +582,9 @@ export class DidService {
       const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
-      if (await this.checkAllowence(address)) {
+      Logger.log(`Address: ${address}`);
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendDIDTxn(
           didDocument,
           signInfos,
@@ -631,9 +633,9 @@ export class DidService {
     Logger.log('registerV2() method: initialising edv service', 'DidService');
 
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: registerV2DidDto.didDocument['id'],
@@ -939,7 +941,9 @@ export class DidService {
         const mnemonic = await getAppMenemonic(kmsId);
         const hypersignDid = await this.didSSIService.initiateHypersignDid(
           mnemonic,
-          this.config.get('NETWORK') ? this.config.get('NETWORK') : 'testnet',
+          this.config.get('HID_NETWORK_NAMESPACE')
+            ? this.config.get('HID_NETWORK_NAMESPACE')
+            : '',
         );
 
         const didInfo = await this.didRepositiory.findOne({
@@ -1006,9 +1010,9 @@ export class DidService {
 
         const { mnemonic: appMenemonic } =
           await global.kmsVault.getDecryptedDocument(kmsId);
-        const namespace = this.config.get('NETWORK')
-          ? this.config.get('NETWORK')
-          : 'testnet';
+        const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+          ? this.config.get('HID_NETWORK_NAMESPACE')
+          : '';
 
         const hypersignDid = await this.didSSIService.initiateHypersignDid(
           appMenemonic,
@@ -1160,9 +1164,9 @@ export class DidService {
     Logger.log('SignDidDocument() method: starts....', 'DidService');
     const { edvId, kmsId } = appDetail;
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     const didId = signDidDto.did ? signDidDto.did : signDidDto.didDocument.id;
     const DidInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
@@ -1219,9 +1223,9 @@ export class DidService {
     Logger.log('VerifyDidDocument() method: starts....', 'DidService');
     const { kmsId } = appDetail;
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     Logger.log(
       'VerifyDidDocument() method: initialising didSSIService service',
       'DidService',

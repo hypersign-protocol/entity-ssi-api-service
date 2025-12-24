@@ -275,7 +275,10 @@ export class SchemaService {
     }
 
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = Namespace.testnet;
+    const namespace =
+      (this.config.get<Namespace>('HID_NETWORK_NAMESPACE') as Namespace) ??
+      Namespace.mainnet;
+    Logger.log('registerSchema() method: initialising hypersignSchema');
     Logger.log('registerSchema() method: initialising hypersignSchema');
 
     const hypersignSchema = await this.schemaSSIservice.initiateHypersignSchema(

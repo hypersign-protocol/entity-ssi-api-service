@@ -154,16 +154,16 @@ export class SchemaProof {
     example: '2023-08-04T07:01:24Z',
   })
   created: string;
-  @IsNotEmpty()
-  @IsString()
-  @ValidateVerificationMethodId()
+  
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification methodId',
     type: String,
     example: '2023-08-04T07:01:24Z',
   })
+  @ValidateVerificationMethodId()
   verificationMethod: string;
+  
   @IsNotEmpty()
   @IsString()
   @ApiProperty({

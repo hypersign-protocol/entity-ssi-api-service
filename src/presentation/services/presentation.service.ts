@@ -344,7 +344,7 @@ export class PresentationRequestService {
       vmWithAssertion.type === IKeyType.BabyJubJubKey2021
     ) {
       hypersignDid = await this.didSSIService.initiateHyperSignBJJDidOffline(
-        'testnet',
+        this.config.get('HID_NETWORK_NAMESPACE') || '',
       );
       const keys = await hypersignDid.generateKeys({
         mnemonic: holderMnemonic,

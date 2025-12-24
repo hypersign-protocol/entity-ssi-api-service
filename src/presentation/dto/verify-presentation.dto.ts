@@ -34,8 +34,8 @@ export class VerifyPresentationDto {
   })
   @IsOptional()
   @ValidateVerificationMethodId()
-  @IsString()
   holderVerificationMethodId?: string;
+
   @ApiProperty({
     name: 'issuerVerificationMethodId',
     description:
@@ -45,7 +45,6 @@ export class VerifyPresentationDto {
   })
   @IsOptional()
   @ValidateVerificationMethodId()
-  @IsString()
   issuerVerificationMethodId?: string;
 }
 
@@ -98,9 +97,9 @@ class PResultProof {
     description: 'Verification id using which credential has signed',
     example: 'did:hid:testnet:...............#key-${id}',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   verificationMethod: string;
+
   @ApiProperty({
     name: 'proofPurpose',
     description: '',
@@ -290,14 +289,15 @@ class PresentationResultProof {
   })
   @IsString()
   created: Date;
+  
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification id using which credential has signed',
     example: 'did:hid:testnet:...............#key-${id}',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   verificationMethod: string;
+
   @ApiProperty({
     name: 'proofPurpose',
     description: '',
@@ -338,13 +338,13 @@ class AuthController {
   @IsString()
   @IsDid()
   'id': string;
+
   @ApiProperty({
     name: 'authentication',
     description: 'verification method id for authentication',
     example: ['did:hid:testnet:........#key-${id}'],
     isArray: true,
   })
-  @IsString()
   @ValidateVerificationMethodId()
   'authentication': Array<string>;
 }
