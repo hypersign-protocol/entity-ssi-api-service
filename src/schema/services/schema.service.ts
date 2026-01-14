@@ -119,8 +119,8 @@ export class SchemaService {
         appMenemonic,
       );
       let registeredSchema;
-
-      if (await this.checkAllowence(address)) {
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendSchemaTxn(
           generatedSchema,
           signedSchema.proof,
@@ -292,7 +292,8 @@ export class SchemaService {
       const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
-      if (await this.checkAllowence(address)) {
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendSchemaTxn(
           registerSchemaDto.schemaDocument,
           registerSchemaDto.schemaProof,
