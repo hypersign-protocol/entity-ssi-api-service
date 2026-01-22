@@ -40,38 +40,29 @@ export class CreditAuthGuard implements CanActivate {
     if (
       !payload ||
       Object.keys(payload).length === 0 ||
-      !payload['sessionId']
+      payload['purpose'] !== 'CreditRecharge' ||
+      !payload['amount'] ||
+      !payload['validityPeriod'] ||
+      !payload['serviceId']
     ) {
       throw new UnauthorizedException('Invalid authorization token');
     }
-    const sessionDetail = await redisClient.get(payload.sessionId);
-    if (!sessionDetail) {
-      throw new UnauthorizedException(['Token is expired or invalid']);
-    }
-    const sessionDetailJson = JSON.parse(sessionDetail);
-    if (
-      !sessionDetailJson ||
-      Object.keys(sessionDetailJson).length === 0 ||
-      sessionDetailJson['purpose'] !== 'CreditRecharge' ||
-      !sessionDetailJson['amount'] ||
-      !sessionDetailJson['validityPeriod'] ||
-      !sessionDetailJson['serviceId']
-    ) {
-      throw new UnauthorizedException("Invalid token. Can't process credit");
-    }
     const creditDetail: CreateCreditManagerDto = {
-      totalCredits: sessionDetailJson['amount'],
-      validityDuration: sessionDetailJson['validityPeriod'],
+      totalCredits: payload['amount'],
+      validityDuration: payload['validityPeriod'],
       validityDurationUnit:
-        sessionDetailJson['validityPeriodUnit'] || ValidityPeriodUnit.DAYS,
-      serviceId: sessionDetailJson['serviceId'],
-      creditDenom: sessionDetailJson['amountDenom'] || 'uHID',
+        payload['validityPeriodUnit'] || ValidityPeriodUnit.DAYS,
+      serviceId: payload['serviceId'],
+      creditDenom: payload['amountDenom'] || 'uHID',
     };
     request['creditDetail'] = creditDetail;
     return true;
+
   }
   private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers['authorization']?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    const credit_token = request.headers[
+      'x-api-credit-token'
+    ] as string;
+    return credit_token;
   }
 }

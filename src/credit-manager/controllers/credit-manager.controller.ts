@@ -14,6 +14,7 @@ import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiHeader,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
@@ -41,7 +42,6 @@ import { ACCESS_TYPES } from '../utils';
 @Controller('credit')
 export class CreditManagerController {
   constructor(private readonly creditManagerService: CreditService) {}
-  @ApiBearerAuth('Authorization')
   @UseGuards(CreditAuthGuard, AccessGuard)
   @ApiCreatedResponse({
     description: 'Credit detail is added successfully',
@@ -59,7 +59,12 @@ export class CreditManagerController {
     description: 'Authorization token is invalid or expired.',
     type: CreditUnAuthorizeError,
   })
-  @Access(ACCESS_TYPES.WRITE_CREDIT)
+  @ApiHeader({
+    name: 'x-api-credit-token',
+    description:
+      'API credit token used to authenticate and authorize requests based on available credits.',
+    required: true,
+  })
   @Post()
   AddNewCreditDetail(@Body() body: CreditManagerRequestDto, @Req() req) {
     Logger.log(

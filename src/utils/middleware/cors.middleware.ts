@@ -19,6 +19,15 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
 
     const origin = req.get('origin');
     const authHeader = req.get('authorization');
+    const apiToken = req.get('x-api-credit-token');
+    let session: any;
+    if (authHeader?.startsWith('Bearer ')) {
+      session = await this.resolveFromAuthJwt(authHeader);
+    } else if (apiToken) {
+      session = this.resolveFromApiToken(apiToken);
+    } else {
+      throw new UnauthorizedException(['Unauthorized', 'Please pass access token']);
+    }
     // const subdomainHeader = req.get('x-subdomain');
 
     // Logger.debug({ origin, subdomainHeader }, 'Middleware');
@@ -26,58 +35,11 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
     // ------------------------------------------------------------------
     // 1️⃣ Authorization header validation
     // ------------------------------------------------------------------
-    if (!authHeader) {
-      throw new UnauthorizedException([
-        'Unauthorized',
-        'Please pass access token',
-      ]);
-    }
-
-    const [, token] = authHeader.split(' ');
-    if (!token) {
-      throw new UnauthorizedException(['Invalid Authorization format']);
-    }
-
-    // ------------------------------------------------------------------
-    // 2️⃣ Verify JWT
-    // ------------------------------------------------------------------
-    let decoded: any;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET as string);
-    } catch (err) {
-      Logger.error(err, 'JWT verification failed');
-      throw new UnauthorizedException(['Invalid or expired token']);
-    }
-
-    if (decoded.grantType !== 'access_service_ssi') {
-      throw new BadRequestException(['Invalid grant type for SSI service']);
-    }
-
-    if (!decoded.sessionId || !decoded.subdomain) {
-      throw new UnauthorizedException(['Invalid authorization token payload']);
-    }
-
-    // ------------------------------------------------------------------
-    // 3️⃣ Fetch session from Redis
-    // ------------------------------------------------------------------
-    const sessionRaw = await redisClient.get(decoded.sessionId);
-    if (!sessionRaw) {
-      throw new UnauthorizedException(['Token expired']);
-    }
-
-    let session;
-    try {
-      session = JSON.parse(sessionRaw);
-    } catch {
-      throw new UnauthorizedException(['Corrupted session data']);
-    }
-
     const {
       subdomain,
       whitelistedCors,
       edvId,
     } = session;
-
     if (!subdomain || !Array.isArray(whitelistedCors)) {
       throw new UnauthorizedException(['Invalid session data']);
     }
@@ -113,5 +75,56 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
     );
 
     next();
+  }
+
+  private async resolveFromAuthJwt(authHeader: string) {
+    const [, token] = authHeader.split(' ');
+    // ------------------------------------------------------------------
+    // 2️⃣ Verify JWT
+    // ------------------------------------------------------------------
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    } catch (err) {
+      Logger.error(err, 'JWT verification failed');
+      throw new UnauthorizedException(['Invalid or expired token']);
+    }
+
+    if (decoded.grantType !== 'access_service_ssi') {
+      throw new BadRequestException(['Invalid grant type']);
+    }
+
+    if (!decoded.sessionId) {
+      throw new UnauthorizedException(['Missing sessionId']);
+    }
+
+    // ------------------------------------------------------------------
+    // 3️⃣ Fetch session from Redis
+    // ------------------------------------------------------------------
+
+    const sessionRaw = await redisClient.get(decoded.sessionId);
+    if (!sessionRaw) {
+      throw new UnauthorizedException(['Token expired']);
+    }
+
+    try {
+      return JSON.parse(sessionRaw);
+    } catch {
+      throw new UnauthorizedException(['Corrupted session data']);
+    }
+  }
+  private resolveFromApiToken(token: string) {
+    // ------------------------------------------------------------------
+    // 2️⃣ Verify JWT
+    // ------------------------------------------------------------------
+
+    let decoded: any;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET as string);
+    } catch (err) {
+      Logger.error(err, 'JWT verification failed');
+      throw new UnauthorizedException(['Invalid or expired token']);
+    }
+    return decoded;
   }
 }
