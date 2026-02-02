@@ -103,7 +103,7 @@ export class CreateDidDto {
   @IsEnum(Namespace, {
     message: "namespace must be one of the following values: 'testnet', '' ",
   })
-  namespace: string;
+  namespace: Namespace;
 
   @ApiProperty({
     name: 'methodSpecificId',

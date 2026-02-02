@@ -120,8 +120,6 @@ export class CreateSchemaDto {
     description: 'Namespace to be added in did.',
     example: 'testnet',
   })
-  @IsString()
-  @IsNotEmpty()
   @IsEnum(Namespace)
   namespace: string;
   

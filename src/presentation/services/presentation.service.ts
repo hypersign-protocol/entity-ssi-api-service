@@ -272,13 +272,13 @@ export class PresentationRequestService {
     const hypersignVP = new HypersignVerifiablePresentation({
       nodeRestEndpoint: this.config.get('HID_NETWORK_API'),
       nodeRpcEndpoint: this.config.get('HID_NETWORK_RPC'),
-      namespace: 'testnet',
+      namespace: this.config.get('HID_NETWORK_NAMESPACE') || '',
     });
 
     const hypersignDID = new HypersignDID({
       nodeRestEndpoint: this.config.get('HID_NETWORK_API'),
       nodeRpcEndpoint: this.config.get('HID_NETWORK_RPC'),
-      namespace: 'testnet',
+      namespace: this.config.get('HID_NETWORK_NAMESPACE') || '',
     });
 
     const {
@@ -354,7 +354,6 @@ export class PresentationRequestService {
         'createPresentation() method: before calling hypersignVP.sign for bjj',
         'PresentationRequestService',
       );
-
       signedVerifiablePresentation = await hypersignVP.bjjVp.sign({
         presentation: unsignedverifiablePresentation as IVerifiablePresentation,
         // holderDid,
@@ -368,7 +367,6 @@ export class PresentationRequestService {
       hypersignDid = new HypersignDID();
       const keys = await hypersignDid.generateKeys({ seed });
       privateKeyMultibase = keys.privateKeyMultibase;
-
       Logger.log(
         'createPresentation() method: before calling hypersignVP.sign',
         'PresentationRequestService',
@@ -404,7 +402,7 @@ export class PresentationRequestService {
     const hypersignVP = new HypersignVerifiablePresentation({
       nodeRestEndpoint: this.config.get('HID_NETWORK_API'),
       nodeRpcEndpoint: this.config.get('HID_NETWORK_RPC'),
-      namespace: 'testnet',
+      namespace: this.config.get('HID_NETWORK_NAMESPACE') || '',
     });
     const { presentation } = presentations;
 

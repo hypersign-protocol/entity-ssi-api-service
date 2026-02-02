@@ -17,7 +17,6 @@ import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.dec
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { IsSchemaId } from 'src/utils/customDecorator/schemaId.deceorator';
 import { IsVcId } from 'src/utils/customDecorator/vc.decorator';
-import { subjectDID } from 'src/utils/customDecorator/SubjectDid.decorator';
 
 export class ResolveCredentialMetadata {
   @ApiProperty({
@@ -88,7 +87,7 @@ export class CreateCredentialDto {
   })
   @IsString()
   @IsNotEmpty()
-  @subjectDID()
+  @IsDid()
   subjectDid: string;
   @ApiProperty({
     name: 'issuerDid',
@@ -145,16 +144,16 @@ export class CreateCredentialDto {
   @IsNotEmptyObject()
   fields: object;
 
-  @ApiProperty({
-    name: 'namespace',
-    description: 'Namespace to be added in vcId.',
-    example: 'testnet',
-  })
-  @IsString()
-  @IsEnum(Namespace, {
-    message: "namespace must be one of the following values: 'testnet'",
-  })
-  namespace: string;
+  // @ApiProperty({
+  //   name: 'namespace',
+  //   description: 'Namespace to be added in vcId.',
+  //   example: 'testnet',
+  // })
+  // @IsString()
+  // @IsEnum(Namespace, {
+  //   message: "namespace must be one of the following values: 'testnet'",
+  // })
+  // namespace: string;
 
   @ApiProperty({
     description: 'Verification Method id for did updation',

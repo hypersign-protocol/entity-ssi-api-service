@@ -860,9 +860,26 @@ export class DidService {
       const { edvId, kmsId } = appDetail;
       Logger.log('resolveDid() method: initialising edv service', 'DidService');
       const mnemonic = await getAppMenemonic(kmsId);
-      const didSplitedArray = did.split(':'); // Todo Remove this worst way of doing it
-      const namespace = didSplitedArray[2];
-      const methodSpecificId = didSplitedArray[3];
+      const parts = did.split(':');
+      let namespace;
+      if (parts.length == 4) {
+        namespace = parts[3]
+      } else {
+        namespace = ''
+      }
+      let methodSpecificId: string;
+
+      if (namespace && namespace !== '') {
+        console.log('inside if')
+        methodSpecificId = parts[3];
+      } else {
+        methodSpecificId = parts[2];
+      }
+
+      if (!methodSpecificId) {
+        throw new Error(`Invalid DID format: ${did}`);
+      }
+
       Logger.log(
         'resolveDid() method: initialising didSSIService service',
         'DidService',
