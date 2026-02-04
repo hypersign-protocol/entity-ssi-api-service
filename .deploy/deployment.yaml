@@ -21,7 +21,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /api/v1/edv/state
-            port: 3001
+            port: __PORT__
           initialDelaySeconds: 120
           periodSeconds: 30
           failureThreshold: 3
