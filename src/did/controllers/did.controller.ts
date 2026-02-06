@@ -60,7 +60,7 @@ import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd'
 import { AccessGuard } from 'src/utils/guards/access.gaurd';
 import { Access } from 'src/utils/customDecorator/access.decorator';
 import { ACCESS_TYPES } from 'src/credit-manager/utils';
-import { IssueDidJwtDto } from '../dto/issue-did-jwt.dto';
+import { IssueDidJwtDto, IssueDidJwtResponseDto } from '../dto/issue-did-jwt.dto';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
@@ -417,7 +417,7 @@ export class DidController {
   }
   @ApiOkResponse({
     description: 'DID Jwt generated successfully',
-    type: RegisterDidResponse,
+    type: IssueDidJwtResponseDto,
   })
   @ApiBadRequestResponse({
     status: 400,

@@ -1,6 +1,14 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsInt, isNotEmpty, IsNotEmpty, IsNotEmptyObject, isNotEmptyObject, IsObject, IsString, Max, Min } from "class-validator";
-import { ValidateVerificationMethodId } from "src/utils/customDecorator/vmId.decorator";
+import { ApiProperty } from '@nestjs/swagger';
+import {
+  IsInt,
+  IsNotEmpty,
+  IsNotEmptyObject,
+  IsObject,
+  IsString,
+  Max,
+  Min,
+} from 'class-validator';
+import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
 
 export class IssueDidJwtDto {
     @ApiProperty({
@@ -19,8 +27,9 @@ export class IssueDidJwtDto {
     @IsNotEmpty()
     audience: string;
     @ApiProperty({
-        description: 'Custom claims to be signed in the JWT payload (validated and allow-listed by server)',
-        example: { name: "xyz", email: "xyz@gmail.com" },
+        description:
+            'Custom claims to be signed in the JWT payload (validated and allow-listed by server)',
+        example: { name: 'xyz', email: 'xyz@gmail.com' },
     })
     @IsObject()
     @IsNotEmptyObject()
@@ -34,9 +43,7 @@ export class IssueDidJwtDto {
     @IsInt()
     @Min(60)
     @Max(60 * 60 * 24)
-    ttlSeconds: number
-
-
+    ttlSeconds: number;
 }
 
 export class IssueDidJwtResponseDto {
@@ -50,6 +57,5 @@ export class IssueDidJwtResponseDto {
         description: 'Token expiry time in seconds',
         example: 3600,
     })
-    expiresIn: number
-
+    expiresIn: number;
 }
