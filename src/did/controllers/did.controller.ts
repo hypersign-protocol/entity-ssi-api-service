@@ -60,6 +60,7 @@ import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd'
 import { AccessGuard } from 'src/utils/guards/access.gaurd';
 import { Access } from 'src/utils/customDecorator/access.decorator';
 import { ACCESS_TYPES } from 'src/credit-manager/utils';
+import { IssueDidJwtDto } from '../dto/issue-did-jwt.dto';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Did')
 @Controller('did')
@@ -413,5 +414,31 @@ export class DidController {
     Logger.log('registerV2() method: starts', 'DidController');
     const appDetail = req.user;
     return this.didService.registerV2(registerV2Dto, appDetail);
+  }
+  @ApiOkResponse({
+    description: 'DID Jwt generated successfully',
+    type: RegisterDidResponse,
+  })
+  @ApiBadRequestResponse({
+    status: 400,
+    description: 'Error occured at the time of did jwt generation.',
+    type: DidError,
+  })
+  @Access(ACCESS_TYPES.WRITE_DID)
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer <access_token>',
+    required: false,
+  })
+  @ApiHeader({
+    name: 'Origin',
+    description: 'Origin as you set in application cors',
+    required: false,
+  })
+  @Post('auth/issue-jwt')
+  issueDidJwt(@Body() jwtClaim: IssueDidJwtDto, @Req() req) {
+    Logger.log('Inside issueDidJwt() to generate did jwt', 'DidController');
+    const appDetail = req.user;
+    return this.didService.issueDidJwt(jwtClaim, appDetail);
   }
 }

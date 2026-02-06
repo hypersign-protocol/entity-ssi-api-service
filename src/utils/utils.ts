@@ -14,12 +14,13 @@ import {
   HttpException,
   ArgumentsHost,
   HttpStatus,
-} from '@nestjs/common';
-
+} from '@nestjs/common'
+import bs58 from 'bs58';;
 export const existDir = (dirPath) => {
   if (!dirPath) throw new Error('Directory path undefined');
   return fs.existsSync(dirPath);
 };
+
 
 export const createDir = (dirPath) => {
   if (!dirPath) throw new Error('Directory path undefined');
@@ -154,3 +155,30 @@ export const CREDIT_COSTS = {
     UPDATE_CREDENTIAL: 50,
   },
 };
+export function ed25519PrivateKeyFromMultibase(
+  privateKeyMultibase: string,
+): Uint8Array {
+  if (!privateKeyMultibase || privateKeyMultibase.length < 2) {
+    throw new Error('Invalid multibase key');
+  }
+  const prefix = privateKeyMultibase[0];
+
+  if (prefix !== 'z') {
+    throw new Error(
+      `Unsupported multibase prefix "${prefix}". Only base58btc (z) is supported.`,
+    );
+  }
+  const base58Value = privateKeyMultibase.slice(1);
+  const decoded = bs58.decode(base58Value);
+
+  if (decoded[0] !== 0x80 || decoded[1] !== 0x26) {
+    throw new Error('Invalid multicodec header: not Ed25519');
+  }
+
+  const rawKey = decoded.slice(2);
+
+  if (rawKey.length !== 32 && rawKey.length !== 64) {
+    throw new Error(`Invalid Ed25519 private key length: ${rawKey.length}`);
+  }
+  return rawKey;
+}

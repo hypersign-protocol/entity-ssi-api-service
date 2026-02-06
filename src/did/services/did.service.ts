@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   Scope,
@@ -34,6 +35,10 @@ import { ConfigService } from '@nestjs/config';
 import { SignDidDto } from '../dto/sign-did.dto';
 import { VerifyDidDto } from '../dto/verify-did.dto';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
+import { IssueDidJwtDto } from '../dto/issue-did-jwt.dto';
+import { ed25519PrivateKeyFromMultibase } from 'src/utils/utils';
+import { createJWT, EdDSASigner } from 'did-jwt';
+
 @Injectable({ scope: Scope.REQUEST })
 export class DidService {
   constructor(
@@ -863,14 +868,13 @@ export class DidService {
       const parts = did.split(':');
       let namespace;
       if (parts.length == 4) {
-        namespace = parts[3]
+        namespace = parts[3];
       } else {
-        namespace = ''
+        namespace = '';
       }
       let methodSpecificId: string;
 
       if (namespace && namespace !== '') {
-        console.log('inside if')
         methodSpecificId = parts[3];
       } else {
         methodSpecificId = parts[2];
@@ -1266,5 +1270,70 @@ export class DidService {
     };
     const verifiedDidDocument = await hypersignDid.verify(params);
     return verifiedDidDocument;
+  }
+  async issueDidJwt(issueDidJwtDto: IssueDidJwtDto, appDetail) {
+    Logger.log(
+      'Inside issueDidJwt() method to generate did based jwt',
+      ' DidService',
+    );
+    const { edvId, kmsId } = appDetail;
+    const { verificationmethodId } = issueDidJwtDto;
+    const did = verificationmethodId.split('#')[0];
+    const didInfo = await this.didRepositiory.findOne({
+      appId: appDetail.appId,
+      did: did,
+    });
+    if (!didInfo) {
+      throw new BadRequestException([
+        `DID ${did} is not registered or does not belong to this app`,
+      ]);
+    }
+    let privateKeyMultibase: string;
+    try {
+      const appVault = await getAppVault(kmsId, edvId);
+      const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+        didInfo.kmsId,
+      );
+      const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
+      const hypersignDid = await this.didSSIService.initiateHypersignDid(
+        await getAppMenemonic(kmsId),
+        this.config.get('HID_NETWORK_NAMESPACE') || '',
+      );
+      const key = await hypersignDid.generateKeys({
+        seed: seed,
+      });
+      privateKeyMultibase = key.privateKeyMultibase;
+    } catch (e) {
+      Logger.error(
+        `Error while accessing signing key: ${e.message}`,
+        'DidService',
+      );
+      throw new InternalServerErrorException([e.message]);
+    }
+    let jwt: string;
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      const privateKey = ed25519PrivateKeyFromMultibase(privateKeyMultibase);
+      jwt = await createJWT(
+        {
+          aud: issueDidJwtDto.audience,
+          ...issueDidJwtDto.claims,
+          iat: now,
+          exp: now + issueDidJwtDto.ttlSeconds,
+        },
+        {
+          issuer: issueDidJwtDto.verificationmethodId,
+          signer: EdDSASigner(privateKey),
+          alg: 'EdDSA',
+        },
+      );
+    } catch (e) {
+      Logger.error(
+        `issueDidJwt() method: Failed to sign DID Jwt: ${e.message}`,
+        'DidService',
+      );
+      throw new BadRequestException([e.message]);
+    }
+    return { accessToken: jwt, expiresIn: issueDidJwtDto.ttlSeconds };
   }
 }
