@@ -33,7 +33,7 @@ export class CredentialSSIService {
       namespace: namespace,
     });
 
-    await hypersignVC.init();
+    // await hypersignVC.init();
     return hypersignVC;
   }
   async initateHypersignBjjVC(mnemonic: string, namespace: string) {
@@ -52,7 +52,7 @@ export class CredentialSSIService {
       nodeRestEndpoint,
       namespace: namespace,
     });
-    await hypersignVC.init();
+    // await hypersignVC.init();
     return hypersignVC;
   }
 }

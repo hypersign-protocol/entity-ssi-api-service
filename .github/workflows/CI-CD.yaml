@@ -44,8 +44,8 @@ jobs:
         GOOGLE_PROJECT_ID: ${{secrets.GOOGLE_PROJECT_ID}}
         GOOGLE_ARTIFACT_URL: ${{secrets.GOOGLE_ARTIFACT_URL}}
         GOOGLE_ARTIFACT_REPO: ${{secrets.GOOGLE_ARTIFACT_REPO}}
-      run: docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }} .
-
+      run: |
+        docker build -t $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }} .
         docker push $GOOGLE_ARTIFACT_URL/$GOOGLE_PROJECT_ID/$GOOGLE_ARTIFACT_REPO/enity-api-service:${{ env.LATEST_RELEASE_TAG }}
     # - name: "Docker Build and Push"
     #   env:
@@ -109,7 +109,7 @@ jobs:
     - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__MNEMONIC__#${{ secrets.MNEMONIC }}#" {} \;
     - name: "Replace secrets"
-      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__Tx_Query_API__#${{ secrets.Tx_Query_API }}#" {} \;  
+      run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__Tx_Query_API__#${{ secrets.Tx_Query_API }}#" {} \;
     - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__JWT_SECRET__#${{ secrets.JWT_SECRET }}#" {} \;
     - name: "Replace secrets"

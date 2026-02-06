@@ -32,6 +32,7 @@ ENV PUPPETEER_SKIP_DOWNLOAD=true
 
 
 COPY ./package.json .
+COPY ./package-lock.json .
 RUN npx patch-package -y 
 
 COPY ./tsconfig.json .
