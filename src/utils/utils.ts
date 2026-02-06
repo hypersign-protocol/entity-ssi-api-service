@@ -14,13 +14,12 @@ import {
   HttpException,
   ArgumentsHost,
   HttpStatus,
-} from '@nestjs/common'
-import bs58 from 'bs58';;
+} from '@nestjs/common';
+import bs58 from 'bs58';
 export const existDir = (dirPath) => {
   if (!dirPath) throw new Error('Directory path undefined');
   return fs.existsSync(dirPath);
 };
-
 
 export const createDir = (dirPath) => {
   if (!dirPath) throw new Error('Directory path undefined');
