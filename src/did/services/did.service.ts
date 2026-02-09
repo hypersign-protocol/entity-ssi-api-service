@@ -35,7 +35,7 @@ import { ConfigService } from '@nestjs/config';
 import { SignDidDto } from '../dto/sign-did.dto';
 import { VerifyDidDto } from '../dto/verify-did.dto';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
-import { IssueDidJwtDto } from '../dto/issue-did-jwt.dto';
+import { IssueDidJwtDto, JWTOptionsWithKid } from '../dto/issue-did-jwt.dto';
 import { ed25519PrivateKeyFromMultibase } from 'src/utils/utils';
 import { createJWT, EdDSASigner } from 'did-jwt';
 
@@ -1277,8 +1277,7 @@ export class DidService {
       ' DidService',
     );
     const { edvId, kmsId } = appDetail;
-    const { verificationmethodId } = issueDidJwtDto;
-    const did = verificationmethodId.split('#')[0];
+    const { verificationmethodId, did } = issueDidJwtDto?.issuer;
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: did,
@@ -1322,10 +1321,11 @@ export class DidService {
           exp: now + issueDidJwtDto.ttlSeconds,
         },
         {
-          issuer: issueDidJwtDto.verificationmethodId,
+          issuer: did,
           signer: EdDSASigner(privateKey),
           alg: 'EdDSA',
-        },
+          kid: verificationmethodId
+        } as JWTOptionsWithKid
       );
     } catch (e) {
       Logger.error(
