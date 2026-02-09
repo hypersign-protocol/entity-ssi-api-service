@@ -1324,8 +1324,8 @@ export class DidService {
           issuer: did,
           signer: EdDSASigner(privateKey),
           alg: 'EdDSA',
-          kid: verificationmethodId
-        } as JWTOptionsWithKid
+          kid: verificationmethodId,
+        } as JWTOptionsWithKid,
       );
     } catch (e) {
       Logger.error(

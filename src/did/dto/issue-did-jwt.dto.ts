@@ -32,7 +32,7 @@ export class Issuer {
   @IsString()
   @IsNotEmpty()
   @IsDid()
-  did: string
+  did: string;
 }
 export class IssueDidJwtDto {
   @ApiProperty({
