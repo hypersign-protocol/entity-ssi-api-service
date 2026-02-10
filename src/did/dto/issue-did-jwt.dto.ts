@@ -28,6 +28,7 @@ export class Issuer {
   @ApiProperty({
     name: 'did',
     description: 'did document id',
+    example: 'did:hid:z6MkmEFC8N1AUsinEBNSszXoepHb45p38ZwidV58r1HPqCkU',
   })
   @IsString()
   @IsNotEmpty()
