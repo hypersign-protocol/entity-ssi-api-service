@@ -36,7 +36,10 @@ import { SignDidDto } from '../dto/sign-did.dto';
 import { VerifyDidDto } from '../dto/verify-did.dto';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 import { IssueDidJwtDto, JWTOptionsWithKid } from '../dto/issue-did-jwt.dto';
-import { ed25519PrivateKeyFromMultibase, RESERVED_CLAIM } from 'src/utils/utils';
+import {
+  ed25519PrivateKeyFromMultibase,
+  RESERVED_CLAIM,
+} from 'src/utils/utils';
 import { createJWT, EdDSASigner } from 'did-jwt';
 import { JWT_CONSTANT } from '../constants/jwt.constant';
 
@@ -1314,7 +1317,11 @@ export class DidService {
     try {
       const now = Math.floor(Date.now() / 1000);
       const privateKey = ed25519PrivateKeyFromMultibase(privateKeyMultibase);
-      const safeClaims = Object.fromEntries(Object.entries(issueDidJwtDto.claims || {}).filter(([key]) => !RESERVED_CLAIM.includes(key)));
+      const safeClaims = Object.fromEntries(
+        Object.entries(issueDidJwtDto.claims || {}).filter(
+          ([key]) => !RESERVED_CLAIM.includes(key),
+        ),
+      );
       if (JSON.stringify(safeClaims).length > JWT_CONSTANT.CLAIMS.MAX_SIZE) {
         throw new BadRequestException(['Claims is too large']);
       }
@@ -1324,15 +1331,12 @@ export class DidService {
         iat: now,
         exp: now + issueDidJwtDto.ttlSeconds,
       };
-      jwt = await createJWT(
-        payload,
-        {
-          issuer: did,
-          signer: EdDSASigner(privateKey),
-          alg: 'EdDSA',
-          kid: verificationMethodId,
-        } as JWTOptionsWithKid,
-      );
+      jwt = await createJWT(payload, {
+        issuer: did,
+        signer: EdDSASigner(privateKey),
+        alg: 'EdDSA',
+        kid: verificationMethodId,
+      } as JWTOptionsWithKid);
     } catch (e) {
       Logger.error(
         `issueDidJwt() method: Failed to sign DID Jwt: ${e.message}`,

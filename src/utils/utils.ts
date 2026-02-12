@@ -181,4 +181,4 @@ export function ed25519PrivateKeyFromMultibase(
   }
   return rawKey;
 }
-export const RESERVED_CLAIM  = ['iss', 'sub', 'aud', 'iat', 'exp', 'nbf', 'jti'];
+export const RESERVED_CLAIM = ['iss', 'sub', 'aud', 'iat', 'exp', 'nbf', 'jti'];
