@@ -424,7 +424,7 @@ export class DidController {
   })
   @ApiBadRequestResponse({
     status: 400,
-    description: 'Error occured at the time of did jwt generation.',
+    description: 'Error occurred at the time of did jwt generation.',
     type: DidError,
   })
   @Access(ACCESS_TYPES.ISSUE_DID_JWT)
@@ -438,6 +438,7 @@ export class DidController {
     description: 'Origin as you set in application cors',
     required: false,
   })
+  @UsePipes(new ValidationPipe())
   @Post('auth/issue-jwt')
   issueDidJwt(@Body() jwtClaim: IssueDidJwtDto, @Req() req) {
     Logger.log('Inside issueDidJwt() to generate did jwt', 'DidController');

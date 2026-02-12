@@ -13,6 +13,7 @@ import {
 import { JWTOptions } from 'did-jwt';
 import { IsDid } from 'src/utils/customDecorator/did.decorator';
 import { ValidateVerificationMethodId } from 'src/utils/customDecorator/vmId.decorator';
+import { JWT_CONSTANT } from '../constants/jwt.constant';
 export interface JWTOptionsWithKid extends JWTOptions {
   kid?: string;
 }
@@ -24,7 +25,7 @@ export class Issuer {
   @IsString()
   @IsNotEmpty()
   @ValidateVerificationMethodId()
-  verificationmethodId: string;
+  verificationMethodId: string;
   @ApiProperty({
     name: 'did',
     description: 'did document id',
@@ -66,8 +67,8 @@ export class IssueDidJwtDto {
     maximum: 86400,
   })
   @IsInt()
-  @Min(60)
-  @Max(60 * 60 * 24)
+  @Min(JWT_CONSTANT.TTL.min)
+  @Max(JWT_CONSTANT.TTL.max)
   ttlSeconds: number;
 }
 

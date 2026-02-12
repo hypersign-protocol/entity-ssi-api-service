@@ -36,8 +36,9 @@ import { SignDidDto } from '../dto/sign-did.dto';
 import { VerifyDidDto } from '../dto/verify-did.dto';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 import { IssueDidJwtDto, JWTOptionsWithKid } from '../dto/issue-did-jwt.dto';
-import { ed25519PrivateKeyFromMultibase } from 'src/utils/utils';
+import { ed25519PrivateKeyFromMultibase, RESERVED_CLAIM } from 'src/utils/utils';
 import { createJWT, EdDSASigner } from 'did-jwt';
+import { JWT_CONSTANT } from '../constants/jwt.constant';
 
 @Injectable({ scope: Scope.REQUEST })
 export class DidService {
@@ -1277,7 +1278,7 @@ export class DidService {
       ' DidService',
     );
     const { edvId, kmsId } = appDetail;
-    const { verificationmethodId, did } = issueDidJwtDto?.issuer;
+    const { verificationMethodId, did } = issueDidJwtDto?.issuer;
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: did,
@@ -1313,18 +1314,23 @@ export class DidService {
     try {
       const now = Math.floor(Date.now() / 1000);
       const privateKey = ed25519PrivateKeyFromMultibase(privateKeyMultibase);
+      const safeClaims = Object.fromEntries(Object.entries(issueDidJwtDto.claims || {}).filter(([key]) => !RESERVED_CLAIM.includes(key)));
+      if (JSON.stringify(safeClaims).length > JWT_CONSTANT.CLAIMS.MAX_SIZE) {
+        throw new BadRequestException(['Claims is too large']);
+      }
+      const payload = {
+        ...safeClaims,
+        aud: issueDidJwtDto.audience,
+        iat: now,
+        exp: now + issueDidJwtDto.ttlSeconds,
+      };
       jwt = await createJWT(
-        {
-          aud: issueDidJwtDto.audience,
-          ...issueDidJwtDto.claims,
-          iat: now,
-          exp: now + issueDidJwtDto.ttlSeconds,
-        },
+        payload,
         {
           issuer: did,
           signer: EdDSASigner(privateKey),
           alg: 'EdDSA',
-          kid: verificationmethodId,
+          kid: verificationMethodId,
         } as JWTOptionsWithKid,
       );
     } catch (e) {
