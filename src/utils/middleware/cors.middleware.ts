@@ -26,7 +26,10 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
     } else if (apiToken) {
       session = this.resolveFromApiToken(apiToken);
     } else {
-      throw new UnauthorizedException(['Unauthorized', 'Please pass access token']);
+      throw new UnauthorizedException([
+        'Unauthorized',
+        'Please pass access token',
+      ]);
     }
     // const subdomainHeader = req.get('x-subdomain');
 
@@ -35,11 +38,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
     // ------------------------------------------------------------------
     // 1️⃣ Authorization header validation
     // ------------------------------------------------------------------
-    const {
-      subdomain,
-      whitelistedCors,
-      edvId,
-    } = session;
+    const { subdomain, whitelistedCors, edvId } = session;
     if (!subdomain || !Array.isArray(whitelistedCors)) {
       throw new UnauthorizedException(['Invalid session data']);
     }
@@ -66,7 +65,7 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
     // 6️⃣ Attach user context
     // ------------------------------------------------------------------
     req.user = {
-      ...session
+      ...session,
     };
 
     Logger.log(

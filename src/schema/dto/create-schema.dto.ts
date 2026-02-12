@@ -122,7 +122,7 @@ export class CreateSchemaDto {
   })
   @IsEnum(Namespace)
   namespace: string;
-  
+
   @ApiProperty({
     description: 'Verification Method id for did updation',
     example: 'did:hid:testnet:........#key-${idx}',

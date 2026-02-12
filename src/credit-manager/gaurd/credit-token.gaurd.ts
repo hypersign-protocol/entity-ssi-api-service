@@ -57,12 +57,9 @@ export class CreditAuthGuard implements CanActivate {
     };
     request['creditDetail'] = creditDetail;
     return true;
-
   }
   private extractTokenFromHeader(request: Request): string | undefined {
-    const credit_token = request.headers[
-      'x-api-credit-token'
-    ] as string;
+    const credit_token = request.headers['x-api-credit-token'] as string;
     return credit_token;
   }
 }

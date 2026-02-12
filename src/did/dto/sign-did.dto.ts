@@ -33,7 +33,7 @@ export class Proof {
   })
   @IsString()
   created: string;
-  
+
   @ApiProperty({
     name: 'verificationMethod',
     description: 'verificationMethodId which is used for signing',
@@ -42,7 +42,7 @@ export class Proof {
   })
   @ValidateVerificationMethodId()
   verificationMethod: string;
-  
+
   @ApiProperty({
     name: 'proofPurpose',
     description: 'proofPurpose',
@@ -149,7 +149,7 @@ export class SignDidDto {
   })
   @ValidateVerificationMethodId()
   verificationMethodId: string;
-  
+
   @ApiProperty({
     name: 'options',
     description: 'optional parameter',

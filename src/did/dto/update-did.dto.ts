@@ -244,7 +244,7 @@ export class UpdateDidDto {
   @IsString()
   @IsNotEmpty()
   did?: string;
-  
+
   @ApiProperty({
     description: 'Verification Method id for did registration',
     example: 'did:hid:testnet:........#key-${idx}',

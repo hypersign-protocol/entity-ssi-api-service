@@ -36,7 +36,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
       accessList: sessionDetail?.accessList || [],
       env: sessionDetail.env,
       appName: sessionDetail.appName,
-      grantType: sessionDetail?.grantType
+      grantType: sessionDetail?.grantType,
     };
     return appDetail;
   }

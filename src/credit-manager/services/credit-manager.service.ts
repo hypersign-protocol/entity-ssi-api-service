@@ -225,5 +225,4 @@ export class CreditService {
         return validityDuration;
     }
   }
-
 }

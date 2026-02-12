@@ -289,7 +289,7 @@ class PresentationResultProof {
   })
   @IsString()
   created: Date;
-  
+
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification id using which credential has signed',
