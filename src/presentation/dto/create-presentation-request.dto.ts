@@ -166,7 +166,10 @@ export class CreatePresentationDto {
     example: 'example.com',
   })
   @IsNotEmpty()
-  @IsUrl()
+  @IsUrl({
+    require_tld: false,
+    require_protocol: true,
+  })
   domain: string;
   @ApiProperty({
     name: 'verificationMethodId',
@@ -195,7 +198,7 @@ class PresentationProof {
   })
   @IsString()
   created: Date;
-  
+
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification id using which credential has signed',
