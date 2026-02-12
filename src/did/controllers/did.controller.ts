@@ -427,7 +427,7 @@ export class DidController {
     description: 'Error occured at the time of did jwt generation.',
     type: DidError,
   })
-  @Access(ACCESS_TYPES.WRITE_DID)
+  @Access(ACCESS_TYPES.ISSUE_DID_JWT)
   @ApiHeader({
     name: 'Authorization',
     description: 'Bearer <access_token>',
