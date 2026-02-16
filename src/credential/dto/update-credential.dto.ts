@@ -11,19 +11,19 @@ export enum Status {
 
 export enum Namespace {
   testnet = 'testnet',
-  // mainnet = '',
+  mainnet = '',
 }
 export class UpdateCredentialDto {
-  @ApiProperty({
-    name: 'namespace',
-    description: 'Namespace to be added in vcId.',
-    example: 'testnet',
-  })
-  @IsString()
-  @IsEnum(Namespace, {
-    message: "namespace must be one of the following values: 'testnet'",
-  })
-  namespace: string;
+  // @ApiProperty({
+  //   name: 'namespace',
+  //   description: 'Namespace to be added in vcId.',
+  //   example: 'testnet',
+  // })
+  // @IsString()
+  // @IsEnum(Namespace, {
+  //   message: "namespace must be one of the following values: 'testnet'",
+  // })
+  // namespace: string;
   @ApiProperty({
     name: 'status',
     description: 'Credential status',
@@ -52,7 +52,5 @@ export class UpdateCredentialDto {
     example: 'did:hid:testnet:........#key-${idx}',
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @IsNotEmpty()
   verificationMethodId: string;
 }

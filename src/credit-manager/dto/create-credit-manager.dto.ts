@@ -36,8 +36,8 @@ export class Credit {
     description: 'Token denom',
     example: 'uhid',
   })
-  @IsNumber()
-  denom: number;
+  @IsString()
+  denom: string;
   @ApiProperty({
     name: 'used',
     description: 'Total used credit',
@@ -161,4 +161,28 @@ export class ActivateCredtiResponse extends createCreditResponse {
   })
   @IsString()
   expiresAt: Date;
+}
+
+export class CreditManagerRequestDto {
+  @ApiProperty({
+    name: 'credit',
+    type: Credit,
+  })
+  @Type(() => Credit)
+  @ValidateNested()
+  credit: Credit;
+  @ApiProperty({
+    name: 'creditScope',
+    description: 'Scope that one will get',
+    example: [
+      'MsgRegisterDID',
+      'MsgDeactivateDID',
+      'MsgRegisterCredentialSchema',
+      'MsgUpdateDID',
+      'MsgUpdateCredentialStatus',
+      'MsgRegisterCredentialStatus',
+    ],
+  })
+  @IsString()
+  creditScope: Array<string>;
 }

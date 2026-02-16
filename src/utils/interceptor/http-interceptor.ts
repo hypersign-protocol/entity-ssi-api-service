@@ -21,7 +21,7 @@ export class AppLoggerMiddleware implements NestMiddleware {
       let { url: path } = request;
       const { statusCode } = response;
       const contentLength = response.get('content-length');
-      const app = request['app'];
+      const app = request['user'];
       const { appId } = app as any;
       if (path.includes('credential/issue')) {
         const reqBody = request.body;

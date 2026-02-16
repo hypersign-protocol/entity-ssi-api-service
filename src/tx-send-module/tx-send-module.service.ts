@@ -18,6 +18,16 @@ import {
   MsgRevoke,
 } from 'cosmjs-types/cosmos/authz/v1beta1/tx';
 
+const FIXED_FEES = {
+  DID_REGISTER_FIXED_FEE: '4000',
+  DID_UPDATE_FIXED_FEE: '1000',
+  DID_DEACTIVATE_FIXED_FEE: '1000',
+  CRED_REGISTER_FIXED_FEE: '2000',
+  CRED_UPDATE_FIXED_FEE: '2000',
+  SCHEMA_UPDATE_FIXED_FEE: '2000',
+  SCHEMA_CREATE_FIXED_FEE: '2000',
+} as const;
+
 @Injectable()
 export class TxSendModuleService {
   private channel: ChannelWrapper;
@@ -37,16 +47,20 @@ export class TxSendModuleService {
       NODE_RPC_URL: this.configService.get('HID_NETWORK_RPC'),
       GRANTEE_MNEMONIC: granteeMnemonic,
       GRANTER_ADDRESS: this.granterAddress,
-      DID_REGISTER_FIXED_FEE: '50',
-      CRED_REGISTER_FIXED_FEE: '50',
-      SCHEMA_CREATE_FIXED_FEE: '50',
+      DID_REGISTER_FIXED_FEE: FIXED_FEES.DID_REGISTER_FIXED_FEE,
+      DID_UPDATE_FIXED_FEE: FIXED_FEES.DID_UPDATE_FIXED_FEE,
+      DID_DEACTIVATE_FIXED_FEE: FIXED_FEES.DID_DEACTIVATE_FIXED_FEE,
+      CRED_REGISTER_FIXED_FEE: FIXED_FEES.CRED_REGISTER_FIXED_FEE,
+      CRED_UPDATE_FIXED_FEE: FIXED_FEES.CRED_UPDATE_FIXED_FEE,
+      SCHEMA_UPDATE_FIXED_FEE: FIXED_FEES.SCHEMA_UPDATE_FIXED_FEE,
+      SCHEMA_CREATE_FIXED_FEE: FIXED_FEES.SCHEMA_CREATE_FIXED_FEE,
       ESTIMATE_GAS_PRICE: '155303',
       podName: 'txn-dynamic',
       granteeWalletAddress: address,
       tenent: appDetail.subdomain,
       Tx_Query_API:
         this.configService.get('Tx_Query_API') ||
-        'https://hypersign-testnet-api.polkachu.com/cosmos/tx/v1beta1/txs/',
+        'https://api.atman.hypersign.id/cosmos/tx/v1beta1/txs/',
     };
 
     await this.channel.assertQueue('GLOBAL_TXN_CONTROLLER_QUEUE', {
@@ -199,7 +213,7 @@ export class TxSendModuleService {
       amount: [
         {
           denom: 'uhid',
-          amount: '100',
+          amount: FIXED_FEES.CRED_UPDATE_FIXED_FEE,
         },
       ],
       gas: '500000',
@@ -264,7 +278,7 @@ export class TxSendModuleService {
       amount: [
         {
           denom: 'uhid',
-          amount: '100',
+          amount: FIXED_FEES.CRED_REGISTER_FIXED_FEE,
         },
       ],
       gas: '500000',
@@ -343,7 +357,7 @@ export class TxSendModuleService {
       amount: [
         {
           denom: 'uhid',
-          amount: '100',
+          amount: FIXED_FEES.DID_DEACTIVATE_FIXED_FEE,
         },
       ],
       gas: '500000',
@@ -417,7 +431,7 @@ export class TxSendModuleService {
       amount: [
         {
           denom: 'uhid',
-          amount: '100',
+          amount: FIXED_FEES.DID_UPDATE_FIXED_FEE,
         },
       ],
       gas: '500000',
@@ -477,7 +491,7 @@ export class TxSendModuleService {
       amount: [
         {
           denom: 'uhid',
-          amount: '100',
+          amount: FIXED_FEES.DID_REGISTER_FIXED_FEE,
         },
       ],
       gas: '500000',
@@ -535,7 +549,7 @@ export class TxSendModuleService {
       amount: [
         {
           denom: 'uhid',
-          amount: '100',
+          amount: FIXED_FEES.CRED_REGISTER_FIXED_FEE,
         },
       ],
       gas: '500000',

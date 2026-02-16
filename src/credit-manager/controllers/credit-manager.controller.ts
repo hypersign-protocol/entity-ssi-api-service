@@ -10,21 +10,20 @@ import {
   Body,
 } from '@nestjs/common';
 import { CreditService } from '../services/credit-manager.service';
-// import { AllExceptionsFilter } from '../../../utility/exception.filter';
 import {
   ApiBadRequestResponse,
   ApiBearerAuth,
   ApiCreatedResponse,
+  ApiHeader,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-// import { CustomAuthGuard } from 'src/auth/auth.guard';
-// import { CreditAuthGuard } from 'src/auth/credit-token.guard';
 import {
   createCreditResponse,
   ActivateCredtiResponse,
+  CreditManagerRequestDto,
 } from '../dto/create-credit-manager.dto';
 import { AllExceptionsFilter } from 'src/utils/utils';
 import {
@@ -34,14 +33,16 @@ import {
 } from '../dto/error-credit.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { CreditAuthGuard } from '../gaurd/credit-token.gaurd';
+import { AccessGuard } from 'src/utils/guards/access.gaurd';
+import { Access } from 'src/utils/customDecorator/access.decorator';
+import { ACCESS_TYPES } from '../utils';
 
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Credit')
 @Controller('credit')
 export class CreditManagerController {
   constructor(private readonly creditManagerService: CreditService) {}
-  @ApiBearerAuth('Authorization')
-  @UseGuards(CreditAuthGuard)
+  @UseGuards(CreditAuthGuard, AccessGuard)
   @ApiCreatedResponse({
     description: 'Credit detail is added successfully',
     type: createCreditResponse,
@@ -58,16 +59,22 @@ export class CreditManagerController {
     description: 'Authorization token is invalid or expired.',
     type: CreditUnAuthorizeError,
   })
+  @ApiHeader({
+    name: 'x-api-credit-token',
+    description:
+      'API credit token used to authenticate and authorize requests based on available credits.',
+    required: true,
+  })
   @Post()
-  AddNewCreditDetail(@Req() req) {
+  AddNewCreditDetail(@Body() body: CreditManagerRequestDto, @Req() req) {
     Logger.log(
       'AddNewCreditDetail() method to add credit detail',
       'CreditManagerController',
     );
-    return this.creditManagerService.addCreditDetail(req.creditDetail);
+    return this.creditManagerService.addCreditDetail(body, req.creditDetail);
   }
   @ApiBearerAuth('Authorization')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), AccessGuard)
   @ApiOkResponse({
     description: 'Credit is activated successfully',
     type: ActivateCredtiResponse,
@@ -84,6 +91,7 @@ export class CreditManagerController {
     description: 'Authorization token is invalid or expired.',
     type: CreditUnAuthorizeError,
   })
+  @Access(ACCESS_TYPES.WRITE_CREDIT)
   @Post(':creditId/activate')
   activateCredit(@Param('creditId') creditId: string) {
     Logger.log(
@@ -93,7 +101,7 @@ export class CreditManagerController {
     return this.creditManagerService.activateCredit(creditId);
   }
   @ApiBearerAuth('Authorization')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), AccessGuard)
   @ApiOkResponse({
     description: 'Fetched all credit detail',
     type: createCreditResponse,
@@ -107,6 +115,7 @@ export class CreditManagerController {
     description: 'Authorization token is invalid or expired.',
     type: CreditUnAuthorizeError,
   })
+  @Access(ACCESS_TYPES.READ_CREDIT)
   @Get()
   fetchCreditDetails() {
     Logger.log(
@@ -116,7 +125,7 @@ export class CreditManagerController {
     return this.creditManagerService.fetchCreditDetails();
   }
   @ApiBearerAuth('Authorization')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), AccessGuard)
   @ApiOkResponse({
     description: 'The details of the credit have been successfully fetched.',
     type: createCreditResponse,
@@ -129,6 +138,7 @@ export class CreditManagerController {
     description: 'Authorization token is invalid or expired.',
     type: CreditUnAuthorizeError,
   })
+  @Access(ACCESS_TYPES.READ_CREDIT)
   @Get(':creditId')
   fetchParticularCreditDetail(@Param('creditId') creditId: string, @Req() req) {
     Logger.log(

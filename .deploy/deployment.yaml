@@ -21,18 +21,18 @@ spec:
         livenessProbe:
           httpGet:
             path: /api/v1/edv/state
-            port: 3001
+            port: __PORT__
           initialDelaySeconds: 120
           periodSeconds: 30
           failureThreshold: 3
 
         resources:
           requests:
-            memory: "2Gi"
-            cpu: "4000m"
+            memory: "1Gi"
+            cpu: "500m"
           limits:
-            memory: "4Gi"
-            cpu: "8000m"
+            memory: "2Gi"
+            cpu: "1"
         ports:
         - containerPort: __PORT__
         env:
@@ -66,6 +66,8 @@ spec:
           value: __Tx_Query_API__
         - name: RABBIT_MQ_URI
           value: __RABBIT_MQ_URI__
+        - name: NODE_ENV
+          value: __NODE_ENV__
         - name: WHITELISTED_CORS
           value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://api.entity-test.hypersign.id','https://wallet-prajna.hypersign.id']"
         volumeMounts:

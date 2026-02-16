@@ -100,10 +100,11 @@ export class CreateDidDto {
     description: 'Namespace to be added in did.',
     example: 'testnet',
   })
+  @IsOptional()
   @IsEnum(Namespace, {
     message: "namespace must be one of the following values: 'testnet', '' ",
   })
-  namespace: string;
+  namespace?: Namespace;
 
   @ApiProperty({
     name: 'methodSpecificId',

@@ -27,11 +27,15 @@ import {
   UsageNotFoundError,
   UsageUnAuthorizeError,
 } from '../dto/error-usage.dto';
+import { AccessGuard } from 'src/utils/guards/access.gaurd';
+import { ACCESS_TYPES } from 'src/credit-manager/utils';
+import { Access } from 'src/utils/customDecorator/access.decorator';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Utilities')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'))
+@UseGuards(AuthGuard('jwt'), AccessGuard)
 @Controller('usage')
+@Access(ACCESS_TYPES.READ_USAGE)
 export class UsageController {
   constructor(private readonly logService: LogService) {}
 

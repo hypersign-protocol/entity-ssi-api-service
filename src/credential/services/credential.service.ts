@@ -39,7 +39,7 @@ export class CredentialService {
     private readonly didRepositiory: DidRepository,
     private readonly txnService: TxSendModuleService,
     private readonly statusService: StatusService,
-  ) { }
+  ) {}
 
   async checkAllowence(address) {
     const url =
@@ -74,9 +74,8 @@ export class CredentialService {
       persist,
     } = createCredentialDto;
     let { registerCredentialStatus } = createCredentialDto;
-    const nameSpace = createCredentialDto.namespace;
+    const nameSpace = this.config.get('HID_NETWORK_NAMESPACE') || '';
     const didOfvmId = verificationMethodId.split('#')[0]; // issuer's did
-
     const { edvId, kmsId } = appDetail;
     Logger.log(
       'create() method: before initialising edv service',
@@ -393,14 +392,14 @@ export class CredentialService {
   ) {
     Logger.log('update() method: starts....', 'CredentialService');
 
-    const { status, statusReason, issuerDid, namespace, verificationMethodId } =
+    const { status, statusReason, issuerDid, verificationMethodId } =
       updateCredentialDto;
     const statusChange =
       status === 'SUSPEND'
         ? 'SUSPENDED'
         : status === 'REVOKE'
-          ? 'REVOKED'
-          : 'LIVE';
+        ? 'REVOKED'
+        : 'LIVE';
     const didOfvmId = verificationMethodId.split('#')[0];
 
     const { edvId, kmsId } = appDetail;
@@ -424,7 +423,6 @@ export class CredentialService {
         `Resource not found`,
       ]);
     }
-
     try {
       // Issuer Identity: - used for authenticating credenital
       const appVault = await getAppVault(kmsId, edvId);
@@ -440,11 +438,7 @@ export class CredentialService {
       );
       let privateKeyMultibase;
       const appMenemonic = await getAppMenemonic(kmsId);
-      const nameSpace = namespace
-        ? namespace
-        : this.config.get('NETWORK')
-          ? this.config.get('NETWORK')
-          : namespace;
+      const nameSpace = this.config.get('HID_NETWORK_NAMESPACE') || '';
       if (
         verificationMethod &&
         verificationMethod.type === IKeyType.BabyJubJubKey2021
@@ -483,7 +477,8 @@ export class CredentialService {
         appMenemonic,
       );
       let updatedCredResult;
-      if (await this.checkAllowence(address)) {
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         const updateCredenital: any = await hypersignVC.updateCredentialStatus({
           credentialStatus,
           issuerDid,
@@ -574,7 +569,7 @@ export class CredentialService {
       if (
         verifyCredentialDto.credentialDocument &&
         verifyCredentialDto.credentialDocument.proof.type ===
-        SupportedSignatureType.BJJSignature2021
+          SupportedSignatureType.BJJSignature2021
       ) {
         verificationResult = await hypersignCredential.bjjVC.verify({
           credential: verifyCredentialDto.credentialDocument as any, // will fix it latter
@@ -650,7 +645,9 @@ export class CredentialService {
           namespace,
         );
       }
-      if (await this.checkAllowence(address)) {
+      Logger.log(`Address: ${address}`);
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendVCTxn(
           credentialStatus,
           proof,

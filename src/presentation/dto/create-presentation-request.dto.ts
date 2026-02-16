@@ -166,7 +166,10 @@ export class CreatePresentationDto {
     example: 'example.com',
   })
   @IsNotEmpty()
-  @IsUrl()
+  @IsUrl({
+    require_tld: false,
+    require_protocol: true,
+  })
   domain: string;
   @ApiProperty({
     name: 'verificationMethodId',
@@ -177,7 +180,6 @@ export class CreatePresentationDto {
   })
   @IsOptional()
   @ValidateVerificationMethodId()
-  @IsString()
   verificationMethodId: string;
 }
 
@@ -196,14 +198,15 @@ class PresentationProof {
   })
   @IsString()
   created: Date;
+
   @ApiProperty({
     name: 'verificationMethod',
     description: 'Verification id using which credential has signed',
     example: 'did:hid:testnet:...............#key-${id}',
   })
-  @IsString()
   @ValidateVerificationMethodId()
   verificationMethod: string;
+
   @ApiProperty({
     name: 'proofPurpose',
     description: '',

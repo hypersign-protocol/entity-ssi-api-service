@@ -50,13 +50,17 @@ import { GetCredentialList } from '../dto/fetch-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
 import { TxnHash } from 'src/did/dto/create-did.dto';
 import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
+import { AccessGuard } from 'src/utils/guards/access.gaurd';
+import { Access } from 'src/utils/customDecorator/access.decorator';
+import { ACCESS_TYPES } from 'src/credit-manager/utils';
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'), ReduceCreditGuard)
+@UseGuards(AuthGuard('jwt'), ReduceCreditGuard, AccessGuard)
 @Controller('credential')
 @ApiTags('Credential')
 export class CredentialController {
   constructor(private readonly credentialService: CredentialService) {}
   @UsePipes(new ValidationPipe({ transform: true }))
+  @Access(ACCESS_TYPES.READ_CREDENTIAL)
   @Get()
   @ApiOkResponse({
     description: 'List of credentials',
@@ -102,7 +106,7 @@ export class CredentialController {
     Logger.log('CredentialController:: findAll() method: starts....');
     return this.credentialService.findAll(req.user, pageOption);
   }
-
+  @Access(ACCESS_TYPES.READ_CREDENTIAL)
   @Get(':credentialId')
   @ApiOkResponse({
     description: 'Resolved credential detail',
@@ -144,6 +148,7 @@ export class CredentialController {
   }
 
   @UsePipes(new ValidationPipe({ transform: true }))
+  @Access(ACCESS_TYPES.WRITE_CREDENTIAL)
   @Post('/issue')
   @ApiCreatedResponse({
     description: 'Credential Created',
@@ -179,6 +184,7 @@ export class CredentialController {
   }
   @UsePipes(ValidationPipe)
   @HttpCode(200)
+  @Access(ACCESS_TYPES.VERIFY_CREDENTIAL)
   @Post('/verify')
   @ApiOkResponse({
     description: 'verification result of credential',
@@ -215,7 +221,7 @@ export class CredentialController {
       req.user,
     );
   }
-
+  @Access(ACCESS_TYPES.WRITE_CREDENTIAL)
   @UsePipes(ValidationPipe)
   @Post('status/register')
   @ApiOkResponse({

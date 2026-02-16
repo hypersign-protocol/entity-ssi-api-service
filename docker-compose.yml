@@ -42,6 +42,7 @@ services:
       SUPER_ADMIN_USERNAME: "root"
       SUPER_ADMIN_PASSWORD: "root"
       SESSION_SECRET_KEY: "43bf9ba55e72565d"
+      NODE_ENV: "production"
     depends_on:
       - "issuer-database"
       - "edv.entity.id"

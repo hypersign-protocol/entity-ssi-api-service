@@ -21,7 +21,9 @@ import { StatusModule } from './status/status.module';
 import { CreditManagerModule } from './credit-manager/credit-manager.module';
 import { UsageModule } from './usage/usage.module';
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: true });
+  const app = await NestFactory.create(AppModule, {
+    cors: true,
+  });
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ extended: true, limit: '10mb' }));
   app.use(express.static(path.join(__dirname, '../public')));
@@ -41,7 +43,7 @@ async function bootstrap() {
   const offlineSigner = hidWalletInstance.offlineSigner;
   const nodeRpcEndpoint = walletOptions.hidNodeRPCUrl;
   const nodeRestEndpoint = walletOptions.hidNodeRestUrl;
-  const namespace = 'testnet';
+  const namespace = process.env.HID_NETWORK_NAMESPACE || '';
   const hsSSIdkInstance = new HypersignSSISdk({
     offlineSigner,
     nodeRpcEndpoint,

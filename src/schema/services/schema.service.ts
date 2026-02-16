@@ -119,8 +119,8 @@ export class SchemaService {
         appMenemonic,
       );
       let registeredSchema;
-
-      if (await this.checkAllowence(address)) {
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendSchemaTxn(
           generatedSchema,
           signedSchema.proof,
@@ -275,7 +275,10 @@ export class SchemaService {
     }
 
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = Namespace.testnet;
+    const namespace =
+      (this.config.get<Namespace>('HID_NETWORK_NAMESPACE') as Namespace) ??
+      Namespace.mainnet;
+    Logger.log('registerSchema() method: initialising hypersignSchema');
     Logger.log('registerSchema() method: initialising hypersignSchema');
 
     const hypersignSchema = await this.schemaSSIservice.initiateHypersignSchema(
@@ -289,7 +292,8 @@ export class SchemaService {
       const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
-      if (await this.checkAllowence(address)) {
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendSchemaTxn(
           registerSchemaDto.schemaDocument,
           registerSchemaDto.schemaProof,

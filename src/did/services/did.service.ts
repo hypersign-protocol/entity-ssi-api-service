@@ -2,6 +2,7 @@ import {
   BadRequestException,
   ConflictException,
   Injectable,
+  InternalServerErrorException,
   Logger,
   NotFoundException,
   Scope,
@@ -34,6 +35,14 @@ import { ConfigService } from '@nestjs/config';
 import { SignDidDto } from '../dto/sign-did.dto';
 import { VerifyDidDto } from '../dto/verify-did.dto';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
+import { IssueDidJwtDto, JWTOptionsWithKid } from '../dto/issue-did-jwt.dto';
+import {
+  ed25519PrivateKeyFromMultibase,
+  RESERVED_CLAIM,
+} from 'src/utils/utils';
+import { createJWT, EdDSASigner } from 'did-jwt';
+import { JWT_CONSTANT } from '../constants/jwt.constant';
+
 @Injectable({ scope: Scope.REQUEST })
 export class DidService {
   constructor(
@@ -43,7 +52,7 @@ export class DidService {
     private readonly didSSIService: DidSSIService,
     private readonly config: ConfigService,
     private readonly txnService: TxSendModuleService,
-  ) { }
+  ) {}
 
   async checkAllowence(address) {
     const url =
@@ -100,22 +109,22 @@ export class DidService {
     if (!address) {
       throw new BadRequestException([
         'options.walletAddress is not passed , required for keyType ' +
-        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
       ]);
     }
     if (!chainId) {
       throw new BadRequestException([
         'options.chainId is not passed , required for keyType ' +
-        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
       ]);
     }
 
     if (register === true) {
       throw new BadRequestException([
         'options.register is true for keyType ' +
-        IKeyType.EcdsaSecp256k1RecoveryMethod2020,
+          IKeyType.EcdsaSecp256k1RecoveryMethod2020,
         IKeyType.EcdsaSecp256k1RecoveryMethod2020 +
-        ' doesnot support register without signature being passed',
+          ' doesnot support register without signature being passed',
         'options.register:false is strongly recomended',
       ]);
     }
@@ -275,7 +284,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-          userCredential.walletAddress,
+            userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
@@ -432,7 +441,7 @@ export class DidService {
       if (!insertedDoc) {
         throw new Error(
           'Could not insert document for userCredential.walletAddress' +
-          userCredential.walletAddress,
+            userCredential.walletAddress,
         );
       }
       const { id: userKMSId } = insertedDoc;
@@ -498,9 +507,9 @@ export class DidService {
 
     // TODO: Once we implemnt authz, we can ask user' to do this tranction
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     const DidInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: registerDidDto.didDocument['id'],
@@ -582,7 +591,9 @@ export class DidService {
       const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
-      if (await this.checkAllowence(address)) {
+      Logger.log(`Address: ${address}`);
+      const isDevMode = this.config.get('NODE_ENV') === 'development';
+      if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendDIDTxn(
           didDocument,
           signInfos,
@@ -631,9 +642,9 @@ export class DidService {
     Logger.log('registerV2() method: initialising edv service', 'DidService');
 
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     const didInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
       did: registerV2DidDto.didDocument['id'],
@@ -757,7 +768,9 @@ export class DidService {
     const { wallet, address } = await this.hidWallet.generateWallet(
       appMenemonic,
     );
-    if (await this.checkAllowence(address)) {
+    Logger.log(`Address: ${address}`);
+    const isDevMode = this.config.get('NODE_ENV') === 'development';
+    if (!isDevMode && (await this.checkAllowence(address))) {
       await this.txnService.sendDIDTxn(
         didDocument,
         finalSignInfos,
@@ -856,9 +869,25 @@ export class DidService {
       const { edvId, kmsId } = appDetail;
       Logger.log('resolveDid() method: initialising edv service', 'DidService');
       const mnemonic = await getAppMenemonic(kmsId);
-      const didSplitedArray = did.split(':'); // Todo Remove this worst way of doing it
-      const namespace = didSplitedArray[2];
-      const methodSpecificId = didSplitedArray[3];
+      const parts = did.split(':');
+      let namespace;
+      if (parts.length == 4) {
+        namespace = parts[3];
+      } else {
+        namespace = '';
+      }
+      let methodSpecificId: string;
+
+      if (namespace && namespace !== '') {
+        methodSpecificId = parts[3];
+      } else {
+        methodSpecificId = parts[2];
+      }
+
+      if (!methodSpecificId) {
+        throw new Error(`Invalid DID format: ${did}`);
+      }
+
       Logger.log(
         'resolveDid() method: initialising didSSIService service',
         'DidService',
@@ -937,7 +966,9 @@ export class DidService {
         const mnemonic = await getAppMenemonic(kmsId);
         const hypersignDid = await this.didSSIService.initiateHypersignDid(
           mnemonic,
-          this.config.get('NETWORK') ? this.config.get('NETWORK') : 'testnet',
+          this.config.get('HID_NETWORK_NAMESPACE')
+            ? this.config.get('HID_NETWORK_NAMESPACE')
+            : '',
         );
 
         const didInfo = await this.didRepositiory.findOne({
@@ -1004,9 +1035,9 @@ export class DidService {
 
         const { mnemonic: appMenemonic } =
           await global.kmsVault.getDecryptedDocument(kmsId);
-        const namespace = this.config.get('NETWORK')
-          ? this.config.get('NETWORK')
-          : 'testnet';
+        const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+          ? this.config.get('HID_NETWORK_NAMESPACE')
+          : '';
 
         const hypersignDid = await this.didSSIService.initiateHypersignDid(
           appMenemonic,
@@ -1158,9 +1189,9 @@ export class DidService {
     Logger.log('SignDidDocument() method: starts....', 'DidService');
     const { edvId, kmsId } = appDetail;
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     const didId = signDidDto.did ? signDidDto.did : signDidDto.didDocument.id;
     const DidInfo = await this.didRepositiory.findOne({
       appId: appDetail.appId,
@@ -1217,9 +1248,9 @@ export class DidService {
     Logger.log('VerifyDidDocument() method: starts....', 'DidService');
     const { kmsId } = appDetail;
     const appMenemonic = await getAppMenemonic(kmsId);
-    const namespace = this.config.get('NETWORK')
-      ? this.config.get('NETWORK')
-      : 'testnet';
+    const namespace = this.config.get('HID_NETWORK_NAMESPACE')
+      ? this.config.get('HID_NETWORK_NAMESPACE')
+      : '';
     Logger.log(
       'VerifyDidDocument() method: initialising didSSIService service',
       'DidService',
@@ -1243,5 +1274,76 @@ export class DidService {
     };
     const verifiedDidDocument = await hypersignDid.verify(params);
     return verifiedDidDocument;
+  }
+  async issueDidJwt(issueDidJwtDto: IssueDidJwtDto, appDetail) {
+    Logger.log(
+      'Inside issueDidJwt() method to generate did based jwt',
+      ' DidService',
+    );
+    const { edvId, kmsId } = appDetail;
+    const { verificationMethodId, did } = issueDidJwtDto?.issuer;
+    const didInfo = await this.didRepositiory.findOne({
+      appId: appDetail.appId,
+      did: did,
+    });
+    if (!didInfo) {
+      throw new BadRequestException([
+        `DID ${did} is not registered or does not belong to this app`,
+      ]);
+    }
+    let privateKeyMultibase: string;
+    try {
+      const appVault = await getAppVault(kmsId, edvId);
+      const { mnemonic: userMnemonic } = await appVault.getDecryptedDocument(
+        didInfo.kmsId,
+      );
+      const seed = await this.hidWallet.getSeedFromMnemonic(userMnemonic);
+      const hypersignDid = await this.didSSIService.initiateHypersignDid(
+        await getAppMenemonic(kmsId),
+        this.config.get('HID_NETWORK_NAMESPACE') || '',
+      );
+      const key = await hypersignDid.generateKeys({
+        seed: seed,
+      });
+      privateKeyMultibase = key.privateKeyMultibase;
+    } catch (e) {
+      Logger.error(
+        `Error while accessing signing key: ${e.message}`,
+        'DidService',
+      );
+      throw new InternalServerErrorException([e.message]);
+    }
+    let jwt: string;
+    try {
+      const now = Math.floor(Date.now() / 1000);
+      const privateKey = ed25519PrivateKeyFromMultibase(privateKeyMultibase);
+      const safeClaims = Object.fromEntries(
+        Object.entries(issueDidJwtDto.claims || {}).filter(
+          ([key]) => !RESERVED_CLAIM.includes(key),
+        ),
+      );
+      if (JSON.stringify(safeClaims).length > JWT_CONSTANT.CLAIMS.MAX_SIZE) {
+        throw new BadRequestException(['Claims is too large']);
+      }
+      const payload = {
+        ...safeClaims,
+        aud: issueDidJwtDto.audience,
+        iat: now,
+        exp: now + issueDidJwtDto.ttlSeconds,
+      };
+      jwt = await createJWT(payload, {
+        issuer: did,
+        signer: EdDSASigner(privateKey),
+        alg: 'EdDSA',
+        kid: verificationMethodId,
+      } as JWTOptionsWithKid);
+    } catch (e) {
+      Logger.error(
+        `issueDidJwt() method: Failed to sign DID Jwt: ${e.message}`,
+        'DidService',
+      );
+      throw new BadRequestException([e.message]);
+    }
+    return { accessToken: jwt, expiresIn: issueDidJwtDto.ttlSeconds };
   }
 }

@@ -120,17 +120,14 @@ export class CreateSchemaDto {
     description: 'Namespace to be added in did.',
     example: 'testnet',
   })
-  @IsString()
-  @IsNotEmpty()
   @IsEnum(Namespace)
   namespace: string;
+
   @ApiProperty({
     description: 'Verification Method id for did updation',
     example: 'did:hid:testnet:........#key-${idx}',
   })
   @ValidateVerificationMethodId()
-  @IsString()
-  @IsNotEmpty()
   verificationMethodId: string;
 }
 

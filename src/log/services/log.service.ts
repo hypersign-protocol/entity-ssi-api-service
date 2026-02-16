@@ -11,7 +11,7 @@ export class LogService {
   ) {}
   async createLog(log: any) {
     Logger.log(
-      `Storing log to db:  ${log.method} ${log.path} ${log.statusCode} ${log.contentLenght} ${log.userAgent} ${log.appId}`,
+      `Storing log to db:  ${log.method} ${log.path} ${log.statusCode} ${log.contentLength} ${log.userAgent} ${log.appId}`,
       'LogService',
     );
 

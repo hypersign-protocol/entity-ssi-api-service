@@ -30,5 +30,4 @@ export class CredentialResponseInterceptor implements NestInterceptor {
       }),
     );
   }
-
 }
