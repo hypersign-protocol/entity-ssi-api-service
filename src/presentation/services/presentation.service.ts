@@ -326,7 +326,15 @@ export class PresentationRequestService {
     // Holder Identity: - used for authenticating presentation
     const { edvId, kmsId } = appDetail;
     const appVault = await getAppVault(kmsId, edvId);
-
+    if (
+      !didDocument ||
+      !Array.isArray(didDocument.verificationMethod) ||
+      didDocument.verificationMethod.length === 0
+    ) {
+      throw new BadRequestException([
+        'No verification methods found in the holder did document for assertion.',
+      ]);
+    }
     const vmWithAssertion = didDocument.verificationMethod.find(
       (vm) => vm.id === verificationMethodIdforAssert,
     );
