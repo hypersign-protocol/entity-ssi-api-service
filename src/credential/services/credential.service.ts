@@ -639,11 +639,13 @@ export class CredentialService {
           appMenemonic,
           namespace,
         );
+        await hypersignVC.init();
       } else {
         hypersignVC = await this.credentialSSIService.initateHypersignVC(
           appMenemonic,
           namespace,
         );
+        await hypersignVC.init();
       }
       Logger.log(`Address: ${address}`);
       const isDevMode = this.config.get('NODE_ENV') === 'development';
