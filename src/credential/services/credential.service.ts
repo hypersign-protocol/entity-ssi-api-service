@@ -123,10 +123,16 @@ export class CredentialService {
         console.log('Getting from Cache');
       } else {
         const resp = await hypersignDid.resolve({ did: issuerDid });
-        didDocument = resp.didDocument;
+        didDocument = resp?.didDocument;
         myCache.set(issuerDid, didDocument);
         Logger.log('Setting Cache');
       }
+      if (!didDocument || !Array.isArray(didDocument.verificationMethod)) {
+        throw new NotFoundException([
+          `Issuer DID ${issuerDid} is not registered or could not be resolved`,
+        ]);
+      }
+
       const verificationMethod = didDocument.verificationMethod.find(
         (vm) => vm.id === verificationMethodId,
       );
@@ -135,12 +141,11 @@ export class CredentialService {
       let privateKeyMultibase;
       let hypersignVC;
       if (!verificationMethod) {
-        throw new Error(
-          `VerificationMethod does not exists for vmId ${verificationMethodId}`,
-        );
+        throw new NotFoundException([
+          `Verification method ${verificationMethodId} was not found for issuer DID ${issuerDid}`,
+        ]);
       }
       if (
-        verificationMethod &&
         verificationMethod.type === IKeyType.Ed25519VerificationKey2020
       ) {
         const key = await hypersignDid.generateKeys({ seed });
@@ -433,6 +438,11 @@ export class CredentialService {
       let hypersignVC;
       const hypersignDid = new HypersignDID();
       const { didDocument } = await hypersignDid.resolve({ did: issuerDid });
+      if (!didDocument || !Array.isArray(didDocument.verificationMethod)) {
+        throw new NotFoundException([
+          `Issuer DID ${issuerDid} is not registered or could not be resolved`,
+        ]);
+      }
       const verificationMethod = didDocument.verificationMethod.find(
         (vm) => vm.id === verificationMethodId,
       );
