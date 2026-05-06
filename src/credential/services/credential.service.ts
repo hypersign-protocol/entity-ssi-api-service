@@ -145,9 +145,7 @@ export class CredentialService {
           `Verification method ${verificationMethodId} was not found for issuer DID ${issuerDid}`,
         ]);
       }
-      if (
-        verificationMethod.type === IKeyType.Ed25519VerificationKey2020
-      ) {
+      if (verificationMethod.type === IKeyType.Ed25519VerificationKey2020) {
         const key = await hypersignDid.generateKeys({ seed });
         privateKeyMultibase = key.privateKeyMultibase;
         hypersignVC = await this.credentialSSIService.initateHypersignVC(
