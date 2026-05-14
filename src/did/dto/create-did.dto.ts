@@ -72,15 +72,17 @@ export class Options {
   @IsBoolean()
   register?: boolean = false; // keeping it for time being will remove it later
 
-  // @ApiProperty({
-  //   description:
-  //     'verificationRelationships defines  verification methods to be used for which purposes',
-  //   example: 'authentication/ assertionMethod',
-  //   name: 'verificationRelationships',
-  //   required: false,
-  //   isArray: true,
-  // })
-  // @IsOptional()
+  @ApiProperty({
+    name: 'namespace',
+    description: 'Namespace to be added in did. Omit to default to mainnet.',
+    example: 'mainnet',
+    required: false,
+  })
+  @IsOptional()
+  @IsEnum(Namespace, {
+    message: "namespace must be one of the following values: 'testnet', 'mainnet'",
+  })
+  namespace?: Namespace = Namespace.mainnet;
   // @IsArray()
   // @IsEnum(IVerificationRelationships, { each: true })
   // verificationRelationships?: IVerificationRelationships[];
