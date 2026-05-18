@@ -1,6 +1,6 @@
 {
   "name": "entity-api-service",
-  "version": "1.0.0",
+  "version": "3.7.2",
   "description": "A SSI API service built on multi tenant architeacture",
   "author": "Vishwas",
   "private": true,
@@ -47,7 +47,7 @@
     "fs": "^0.0.1-security",
     "hid-hd-wallet": "git+https://github.com/hypersign-protocol/hid-hd-wallet.git#main",
     "hs-ssi-sdk": "github:hypersign-protocol/hid-ssi-js-sdk#5a6e95e4956fdf72e9340a8edc8526f2272e2f39",
-    "hypersign-edv-client": "github:hypersign-protocol/hypersign-edv-client#deleteByDocumentId",
+    "hypersign-edv-client": "github:hypersign-protocol/hypersign-edv-client",
     "idb-keyval": "^6.2.1",
     "ioredis": "^5.8.2",
     "mongoose": "^6.8.3",
