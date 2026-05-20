@@ -44,9 +44,7 @@ export class QueueMonitorService implements OnModuleInit {
       this.config.get<string>('GLOBAL_TXN_CONTROLLER_DLQ') ||
       'GLOBAL_TXN_CONTROLLER_DLQ';
 
-    this.logger.log(
-      `RabbitMQ management endpoint: ${this.managementBaseUrl}`,
-    );
+    this.logger.log(`RabbitMQ management endpoint: ${this.managementBaseUrl}`);
   }
 
   // -----------------------------------------------------------------------

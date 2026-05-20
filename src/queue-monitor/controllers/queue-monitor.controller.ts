@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Query,
-  UseFilters,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Query, UseFilters, UseGuards } from '@nestjs/common';
 import {
   ApiBearerAuth,
   ApiOkResponse,
@@ -90,9 +84,7 @@ export class QueueMonitorController {
     description: 'Messages peeked from the DLQ (requeued immediately)',
     type: [PeekMessageDto],
   })
-  peekDLQMessages(
-    @Query('count') count?: string,
-  ): Promise<PeekMessageDto[]> {
+  peekDLQMessages(@Query('count') count?: string): Promise<PeekMessageDto[]> {
     const parsedCount = count ? parseInt(count, 10) : 10;
     return this.queueMonitorService.peekDLQMessages(parsedCount);
   }
