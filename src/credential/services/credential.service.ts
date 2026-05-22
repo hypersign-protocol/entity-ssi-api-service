@@ -28,7 +28,8 @@ import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 import * as NodeCache from 'node-cache';
 import { StatusService } from 'src/status/status.service';
-const myCache = new NodeCache();
+const CACHE_TTL_SECONDS = 300;
+const myCache = new NodeCache({ stdTTL: CACHE_TTL_SECONDS, checkperiod: 60 });
 @Injectable()
 export class CredentialService {
   constructor(
@@ -124,7 +125,7 @@ export class CredentialService {
       } else {
         const resp = await hypersignDid.resolve({ did: issuerDid });
         didDocument = resp?.didDocument;
-        myCache.set(issuerDid, didDocument);
+        myCache.set(issuerDid, didDocument, CACHE_TTL_SECONDS);
         Logger.log('Setting Cache');
       }
       if (!didDocument || !Array.isArray(didDocument.verificationMethod)) {
