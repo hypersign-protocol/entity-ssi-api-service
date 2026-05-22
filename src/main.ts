@@ -20,7 +20,7 @@ import { CredentialModule } from './credential/credential.module';
 import { StatusModule } from './status/status.module';
 import { CreditManagerModule } from './credit-manager/credit-manager.module';
 import { UsageModule } from './usage/usage.module';
-import { QueueMonitorModule } from './queue-monitor/queue-monitor.module';
+// import { QueueMonitorModule } from './queue-monitor/queue-monitor.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     cors: true,
@@ -138,7 +138,7 @@ async function bootstrap() {
         StatusModule,
         CreditManagerModule,
         UsageModule,
-        QueueMonitorModule,
+        // QueueMonitorModule,
       ], // don't include, say, BearsModule
     });
 

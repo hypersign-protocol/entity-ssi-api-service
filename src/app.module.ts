@@ -13,7 +13,7 @@ import { CreditManagerModule } from './credit-manager/credit-manager.module';
 import { LogModule } from './log/log.module';
 import { AppLoggerMiddleware } from './utils/interceptor/http-interceptor';
 import { UsageModule } from './usage/usage.module';
-import { QueueMonitorModule } from './queue-monitor/queue-monitor.module';
+// import { QueueMonitorModule } from './queue-monitor/queue-monitor.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -30,7 +30,7 @@ import { QueueMonitorModule } from './queue-monitor/queue-monitor.module';
     CreditManagerModule,
     LogModule,
     UsageModule,
-    QueueMonitorModule,
+    // QueueMonitorModule,
   ],
   controllers: [],
   providers: [{ provide: APP_FILTER, useClass: AllExceptionsFilter }],
