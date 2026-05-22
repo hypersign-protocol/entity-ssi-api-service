@@ -80,7 +80,8 @@ export class Options {
   })
   @IsOptional()
   @IsEnum(Namespace, {
-    message: "namespace must be one of the following values: 'testnet', 'mainnet'",
+    message:
+      "namespace must be one of the following values: 'testnet', 'mainnet'",
   })
   namespace?: Namespace = Namespace.mainnet;
   // @IsArray()
