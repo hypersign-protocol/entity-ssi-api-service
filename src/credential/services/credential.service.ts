@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  HttpException,
   Injectable,
   Logger,
   NotFoundException,
@@ -121,7 +122,7 @@ export class CredentialService {
       let didDocument;
       if (myCache.has(issuerDid)) {
         didDocument = myCache.get(issuerDid);
-        console.log('Getting from Cache');
+        Logger.debug('Getting from Cache');
       } else {
         const resp = await hypersignDid.resolve({ did: issuerDid });
         didDocument = resp?.didDocument;
@@ -281,7 +282,10 @@ export class CredentialService {
         credentialStatus: credStatusTemp,
         metadata,
       };
-    } catch (e) {
+    } catch (e: any) {
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new BadRequestException([e.message]);
     }
   }
@@ -529,8 +533,11 @@ export class CredentialService {
       return await hypersignVC.resolveCredentialStatus({
         credentialId: id,
       });
-    } catch (e) {
+    } catch (e: any) {
       Logger.error(`update() method: Error ${e.message}`, 'CredentialService');
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new BadRequestException([e.message]);
     }
   }
@@ -594,11 +601,14 @@ export class CredentialService {
             verifyCredentialDto.credentialDocument.proof.verificationMethod,
         });
       }
-    } catch (e) {
+    } catch (e: any) {
       Logger.error(
         `verfiyCredential() method: Error:${e.message}`,
         'CredentialService',
       );
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new BadRequestException([e.message]);
     }
     Logger.log('verfiyCredential() method: ends....', 'CredentialService');
@@ -671,11 +681,14 @@ export class CredentialService {
           credentialStatusProof: proof,
         });
       }
-    } catch (e) {
+    } catch (e: any) {
       Logger.error(
         `registerCredentialStatus() method: Error ${e.message}`,
         'CredentialService',
       );
+      if (e instanceof HttpException) {
+        throw e;
+      }
       throw new BadRequestException([e.message]);
     }
     Logger.log(
