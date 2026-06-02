@@ -51,14 +51,24 @@ export class ReduceCreditGuard implements CanActivate {
           return;
         }
         try {
+          // Ensure we have an active credit plan to deduct from
+          if (!activeCredit) {
+            Logger.error(
+              'No active credit plan available to deduct from.',
+              'ReduceCreditGuard',
+            );
+            return;
+          }
+
           let remainingCreditsNeeded = creditDetails.creditAmountRequired;
           let remainingHIDNeeded = Number(
             creditDetails.attestationCost.hidCost,
           );
           const availableCredits =
-            activeCredit.totalCredits - activeCredit.used;
+            (activeCredit?.totalCredits ?? 0) - (activeCredit?.used ?? 0);
           const availableHID =
-            Number(activeCredit.credit.amount) - activeCredit.credit.used;
+            Number(activeCredit?.credit?.amount ?? 0) -
+            (activeCredit?.credit?.used ?? 0);
           if (
             availableCredits < remainingCreditsNeeded ||
             availableHID < remainingHIDNeeded
@@ -131,7 +141,7 @@ export class ReduceCreditGuard implements CanActivate {
             );
           }
           Logger.log('Credits deducted successfully', 'ReduceCreditGuard');
-        } catch (error) {
+        } catch (error: any) {
           Logger.error(
             'Error deducting credits: ' + error.message,
             'ReduceCreditGuard',
