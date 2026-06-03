@@ -43,7 +43,10 @@ export class CreditManagerService {
       activeCredit.used >= activeCredit.totalCredits ||
       (activeCredit.expiresAt &&
         new Date(activeCredit.expiresAt) <= new Date()) ||
-      activeCredit.totalCredits - activeCredit.used < creditAmountRequired
+      activeCredit.totalCredits - activeCredit.used < creditAmountRequired ||
+      Number(activeCredit?.credit?.amount ?? 0) -
+        Number(activeCredit?.credit?.used ?? 0) <
+        requiredHidCost
     ) {
       const availableCredit = await this.creditService.getNextAvailableCredit(
         String(requiredHidCost),

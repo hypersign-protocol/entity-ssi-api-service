@@ -123,6 +123,7 @@ export class ReduceCreditGuard implements CanActivate {
                   'No inactive credit plan available to activate.',
                   'ReduceCreditGuard',
                 );
+                return;
               }
             }
           } else {
