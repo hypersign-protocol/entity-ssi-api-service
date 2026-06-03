@@ -25,9 +25,7 @@ export class ReduceCreditGuard implements CanActivate {
 
     //Check if the user has a valid plan with enough balance
     const creditDetails = await this.creditManagerService.hasValidCredit(req);
-    const activeCredit = await this.creditService.getActiveCredit(
-      String(creditDetails.attestationCost.hidCost),
-    );
+    const activeCredit = creditDetails.activeCredit;
     if (!creditDetails['hasSufficientFund']) {
       Logger.error(
         'User does not have a valid plan or enough credits',
@@ -81,7 +79,7 @@ export class ReduceCreditGuard implements CanActivate {
             remainingCreditsNeeded -= deductedCredits;
             remainingHIDNeeded -= deductedHID;
 
-            if (remainingCreditsNeeded > 0) {
+            if (remainingCreditsNeeded > 0 || remainingHIDNeeded > 0) {
               const inactiveCreditPlan =
                 await this.creditService.getNextAvailableCredit(
                   `${remainingHIDNeeded}`,

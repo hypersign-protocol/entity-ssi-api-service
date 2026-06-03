@@ -1,6 +1,5 @@
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreditService } from '../services/credit-manager.service';
-import { RMethods } from 'src/utils/utils';
 import { ApiCreditService } from '../services/api-credit.service';
 import { AttestationCreditService } from '../services/attestation-credit.service';
 import { StorageCreditService } from '../services/storage-credit.service';
@@ -14,10 +13,12 @@ export class CreditManagerService {
     private readonly attestationCreditService: AttestationCreditService,
   ) {}
 
-  async hasValidCredit(
-    req,
-  ): Promise<{ attestationCost; creditAmountRequired; hasSufficientFund }> {
-    const appId = req.user.appId;
+  async hasValidCredit(req): Promise<{
+    attestationCost;
+    creditAmountRequired;
+    hasSufficientFund;
+    activeCredit;
+  }> {
     const { storageType, attestationType, method } = await getApiDetail(req);
     const apiCost = method
       ? await this.apiCreditService.calculateCost(method)
@@ -30,10 +31,11 @@ export class CreditManagerService {
       : { hidCost: 0, creditCost: 0 };
     const { hidCost, creditCost } = attestationCost;
     const creditAmountRequired = apiCost + storageCost + creditCost;
+    const requiredHidCost = Number(hidCost);
 
     // Fetch user's active plan
-    const activeCredit = await this.creditService.getActiveCredit(
-      String(hidCost),
+    let activeCredit = await this.creditService.getActiveCredit(
+      String(requiredHidCost),
     );
 
     if (
@@ -44,15 +46,31 @@ export class CreditManagerService {
       activeCredit.totalCredits - activeCredit.used < creditAmountRequired
     ) {
       const availableCredit = await this.creditService.getNextAvailableCredit(
-        String(attestationCost),
+        String(requiredHidCost),
       );
       if (!availableCredit) {
         throw new BadRequestException([
           'No credits found or credit exhausted. Please contact the admin',
         ]);
       }
+      if (!activeCredit) {
+        await this.creditService.activateCredit(availableCredit._id);
+        activeCredit = await this.creditService.getActiveCredit(
+          String(requiredHidCost),
+        );
+      }
     }
-    return { attestationCost, creditAmountRequired, hasSufficientFund: true };
+    if (!activeCredit) {
+      throw new BadRequestException([
+        'No active credit plan found. Please contact the admin',
+      ]);
+    }
+    return {
+      attestationCost,
+      creditAmountRequired,
+      hasSufficientFund: true,
+      activeCredit,
+    };
   }
   async getCreditDetailFromPath(apiMethod, apiPath) {
     const { storageType, attestationType, method } = await getApiDetail({
