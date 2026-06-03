@@ -135,12 +135,22 @@ export class CredentialService {
 
     try {
       // Issuer Identity: - used for authenticating credenital
+      const vaultStart = this.logStart(
+        'initialiseAppVaultAndGetIssuerSeed',
+        'initialising app vault',
+      );
       const appVault = await getAppVault(kmsId, edvId);
       const { mnemonic: issuerMnemonic } = await appVault.getDecryptedDocument(
         didInfo.kmsId,
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
+      this.logEnd('initialiseAppVaultAndGetIssuerSeed', vaultStart);
+
       const hypersignDid = new HypersignDID();
+      const resolvedDIDStart = this.logStart(
+        'resolveIssuerDIDDocument',
+        'resolving issuer DID',
+      );
       let didDocument;
       if (myCache.has(issuerDid)) {
         didDocument = myCache.get(issuerDid);
@@ -156,7 +166,7 @@ export class CredentialService {
           `Issuer DID ${issuerDid} is not registered or could not be resolved`,
         ]);
       }
-
+      this.logEnd('resolveIssuerDIDDocument', resolvedDIDStart);
       const verificationMethod = didDocument.verificationMethod.find(
         (vm) => vm.id === verificationMethodId,
       );
@@ -191,7 +201,10 @@ export class CredentialService {
       }
 
       let credential;
-
+      const generateCredentialStart = this.logStart(
+        'generateCredential',
+        'generating credential',
+      );
       if (schemaId) {
         credential = await hypersignVC.generate({
           schemaId,
@@ -219,13 +232,20 @@ export class CredentialService {
           expirationDate,
         });
       }
+      this.logEnd('generateCredential', generateCredentialStart);
+
       Logger.log(
         'create() method: before calling hypersignVC.issue',
         'CredentialService',
       );
+
       if (registerCredentialStatus == undefined) {
         registerCredentialStatus = true;
       }
+      const issueCredentialStart = this.logStart(
+        'issueCredential',
+        'issuing credential and registering credential status on blockchain if registerCredentialStatus is true',
+      );
       const {
         signedCredential,
         credentialStatus,
@@ -241,6 +261,7 @@ export class CredentialService {
       const credStatusTemp = {};
       Object.assign(credStatusTemp, credentialStatus);
 
+      this.logEnd('issueCredential', issueCredentialStart);
       const credStatus = {
         credentialStatus,
         namespace: nameSpace,
@@ -248,7 +269,6 @@ export class CredentialService {
       if (registerCredentialStatus) {
         await this.registerCredentialStatus(credStatus, appDetail);
       }
-
       let edvData = undefined;
       if (persist) {
         const creedential = {
