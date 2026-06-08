@@ -12,26 +12,41 @@ export class SchemaSSIService {
     private readonly hidWallet: HidWalletService,
   ) {}
 
+  private logStart(fn: string, description: string) {
+    const start = performance.now();
+    Logger.debug(`Starting ${fn}() - ${description}`, `SchemaSSIService.${fn}`);
+    return start;
+  }
+
+  private logEnd(fn: string, start: number) {
+    const elapsed = (performance.now() - start).toFixed(2);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `SchemaSSIService.${fn}`);
+  }
+
   async initiateHypersignSchema(mnemonic: string, namespace: string) {
-    Logger.log('initiateHypersignSchema(): starts....', 'SchemaSSIService');
-
-    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
-    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
-    await this.hidWallet.generateWallet(mnemonic);
-    Logger.log(
-      'initiateHypersignSchema() method: before getting offlinesigner',
-      'SchemaSSIService',
+    const start = this.logStart(
+      'initiateHypersignSchema',
+      'initialize a Hypersign schema client with the provided mnemonic',
     );
-    const offlineSigner = this.hidWallet.getOfflineSigner();
-    const hypersignSchema = new HypersignSchema({
-      offlineSigner,
-      nodeRpcEndpoint,
-      nodeRestEndpoint,
-      namespace: namespace,
-    });
-    await hypersignSchema.init();
-    Logger.log('initiateHypersignSchema(): ends....', 'SchemaSSIService');
-
-    return hypersignSchema;
+    try {
+      const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+      const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+      await this.hidWallet.generateWallet(mnemonic);
+      Logger.log(
+        'initiateHypersignSchema() method: before getting offlinesigner',
+        'SchemaSSIService',
+      );
+      const offlineSigner = this.hidWallet.getOfflineSigner();
+      const hypersignSchema = new HypersignSchema({
+        offlineSigner,
+        nodeRpcEndpoint,
+        nodeRestEndpoint,
+        namespace: namespace,
+      });
+      await hypersignSchema.init();
+      return hypersignSchema;
+    } finally {
+      this.logEnd('initiateHypersignSchema', start);
+    }
   }
 }

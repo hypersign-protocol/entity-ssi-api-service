@@ -43,27 +43,52 @@ export class CredentialService {
     private readonly statusService: StatusService,
   ) {}
 
+  private logStart(fn: string, description: string) {
+    const start = performance.now();
+    Logger.debug(
+      `Starting ${fn}() - ${description}`,
+      `CredentialService.${fn}`,
+    );
+    return start;
+  }
+
+  private logEnd(fn: string, start: number) {
+    const elapsed = (performance.now() - start).toFixed(2);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `CredentialService.${fn}`);
+  }
+
   async checkAllowence(address) {
-    const url =
-      this.config.get('HID_NETWORK_API') +
-      '/cosmos/feegrant/v1beta1/allowances/' +
-      address;
+    const start = this.logStart(
+      'checkAllowence',
+      'check wallet feegrant allowances for the given address',
+    );
+    try {
+      const url =
+        this.config.get('HID_NETWORK_API') +
+        '/cosmos/feegrant/v1beta1/allowances/' +
+        address;
 
-    const resp = await fetch(url);
+      const resp = await fetch(url);
 
-    const res = await resp.json();
-    if (resp.status === 200) {
-      if (res.allowances.length > 0) {
-        return true;
-      } else {
-        return false;
+      const res = await resp.json();
+      if (resp.status === 200) {
+        if (res.allowances.length > 0) {
+          return true;
+        } else {
+          return false;
+        }
       }
+      return false;
+    } finally {
+      this.logEnd('checkAllowence', start);
     }
-    return false;
   }
 
   async create(createCredentialDto: CreateCredentialDto, appDetail) {
-    Logger.log('create() method: starts....', 'CredentialService');
+    const start = this.logStart(
+      'create',
+      'create and optionally persist a verifiable credential',
+    );
     const {
       schemaId,
       subjectDid,
@@ -113,12 +138,22 @@ export class CredentialService {
 
     try {
       // Issuer Identity: - used for authenticating credenital
+      const vaultStart = this.logStart(
+        'initialiseAppVaultAndGetIssuerSeed',
+        'initialising app vault',
+      );
       const appVault = await getAppVault(kmsId, edvId);
       const { mnemonic: issuerMnemonic } = await appVault.getDecryptedDocument(
         didInfo.kmsId,
       );
       const seed = await this.hidWallet.getSeedFromMnemonic(issuerMnemonic);
+      this.logEnd('initialiseAppVaultAndGetIssuerSeed', vaultStart);
+
       const hypersignDid = new HypersignDID();
+      const resolvedDIDStart = this.logStart(
+        'resolveIssuerDIDDocument',
+        'resolving issuer DID',
+      );
       let didDocument;
       if (myCache.has(issuerDid)) {
         didDocument = myCache.get(issuerDid);
@@ -134,7 +169,7 @@ export class CredentialService {
           `Issuer DID ${issuerDid} is not registered or could not be resolved`,
         ]);
       }
-
+      this.logEnd('resolveIssuerDIDDocument', resolvedDIDStart);
       const verificationMethod = didDocument.verificationMethod.find(
         (vm) => vm.id === verificationMethodId,
       );
@@ -169,7 +204,10 @@ export class CredentialService {
       }
 
       let credential;
-
+      const generateCredentialStart = this.logStart(
+        'generateCredential',
+        'generating credential',
+      );
       if (schemaId) {
         credential = await hypersignVC.generate({
           schemaId,
@@ -197,13 +235,20 @@ export class CredentialService {
           expirationDate,
         });
       }
+      this.logEnd('generateCredential', generateCredentialStart);
+
       Logger.log(
         'create() method: before calling hypersignVC.issue',
         'CredentialService',
       );
+
       if (registerCredentialStatus == undefined) {
         registerCredentialStatus = true;
       }
+      const issueCredentialStart = this.logStart(
+        'issueCredential',
+        'issuing credential and registering credential status on blockchain if registerCredentialStatus is true',
+      );
       const {
         signedCredential,
         credentialStatus,
@@ -219,6 +264,7 @@ export class CredentialService {
       const credStatusTemp = {};
       Object.assign(credStatusTemp, credentialStatus);
 
+      this.logEnd('issueCredential', issueCredentialStart);
       const credStatus = {
         credentialStatus,
         namespace: nameSpace,
@@ -226,7 +272,6 @@ export class CredentialService {
       if (registerCredentialStatus) {
         await this.registerCredentialStatus(credStatus, appDetail);
       }
-
       let edvData = undefined;
       if (persist) {
         const creedential = {
@@ -287,18 +332,30 @@ export class CredentialService {
         throw e;
       }
       throw new BadRequestException([e.message]);
+    } finally {
+      this.logEnd('create', start);
     }
   }
 
   async findAll(appDetail, paginationOption) {
-    Logger.log('findAll() method: starts....', 'CredentialService');
-    const skip = (paginationOption.page - 1) * paginationOption.limit;
-    paginationOption['skip'] = skip;
-    Logger.log('findAll() method: fetching data from db', 'CredentialService');
-    return await this.credentialRepository.find({
-      appId: appDetail.appId,
-      paginationOption,
-    });
+    const start = this.logStart(
+      'findAll',
+      'fetch paginated credentials for the application',
+    );
+    try {
+      const skip = (paginationOption.page - 1) * paginationOption.limit;
+      paginationOption['skip'] = skip;
+      Logger.log(
+        'findAll() method: fetching data from db',
+        'CredentialService',
+      );
+      return await this.credentialRepository.find({
+        appId: appDetail.appId,
+        paginationOption,
+      });
+    } finally {
+      this.logEnd('findAll', start);
+    }
   }
 
   async resolveCredential(
@@ -306,91 +363,103 @@ export class CredentialService {
     appDetail,
     retrieveCredential: boolean,
   ) {
-    Logger.log('resolveCredential() method: starts....', 'CredentialService');
-
-    const credentialDetail = await this.credentialRepository.findOne({
-      appId: appDetail.appId,
-      credentialId,
-    });
-    if (!credentialDetail || credentialDetail == null) {
-      Logger.error(
-        'resolveCredential() method: Error: Credential not found',
-        'CredentialService',
-      );
-      throw new NotFoundException([
-        `${credentialId} is not found`,
-        `${credentialId} does not belongs to the App id: ${appDetail.appId}`,
-      ]);
-    }
-    let credential;
-    if (credentialDetail.persist === true && retrieveCredential === true) {
-      const { edvId, kmsId } = appDetail;
-      Logger.log(
-        'resolveCredential() method: before initialising edv service',
-        'CredentialService',
-      );
-      const appVault = await getAppVault(kmsId, edvId);
-      const signedCredential = await appVault.getDecryptedDocument(
-        credentialDetail.edvDocId,
-      );
-      credential = signedCredential;
-    }
-    Logger.log(
-      'resolveCredential() method: before initialising HypersignVerifiableCredential',
-      'CredentialService',
+    const start = this.logStart(
+      'resolveCredential',
+      'resolve credential status and optionally retrieve stored credential',
     );
+    try {
+      const credentialDetail = await this.credentialRepository.findOne({
+        appId: appDetail.appId,
+        credentialId,
+      });
+      if (!credentialDetail || credentialDetail == null) {
+        Logger.error(
+          'resolveCredential() method: Error: Credential not found',
+          'CredentialService',
+        );
+        throw new NotFoundException([
+          `${credentialId} is not found`,
+          `${credentialId} does not belongs to the App id: ${appDetail.appId}`,
+        ]);
+      }
+      let credential;
+      if (credentialDetail.persist === true && retrieveCredential === true) {
+        const { edvId, kmsId } = appDetail;
+        Logger.log(
+          'resolveCredential() method: before initialising edv service',
+          'CredentialService',
+        );
+        const appVault = await getAppVault(kmsId, edvId);
+        const signedCredential = await appVault.getDecryptedDocument(
+          credentialDetail.edvDocId,
+        );
+        credential = signedCredential;
+      }
+      Logger.log(
+        'resolveCredential() method: before initialising HypersignVerifiableCredential',
+        'CredentialService',
+      );
 
-    const metadata = {
-      credentialId: credentialDetail.credentialId,
-      persist: credentialDetail.persist,
-      type: credentialDetail.type,
-      issuerDid: credentialDetail.issuerDid,
-      registerCredentialStatus: credentialDetail.registerCredentialStatus,
-    } as ResolveCredentialMetadata;
-    let credentialStatus = undefined;
-    // If user had registered the credential on the blockchain
-    // Only then we will go ahead with credential status retrival
-    const shouldRetriveCredential = credentialDetail.registerCredentialStatus
-      ? credentialDetail.registerCredentialStatus
-      : true; // making default true for backwards compatibility
-    if (shouldRetriveCredential) {
-      /// First check this transaction was successful in lcoal db or there was some error
-      const statusResponse = await this.statusService.findBySsiId(credentialId);
-      let wasTransactionSuccess = false;
-      if (statusResponse) {
-        const firstResponse = statusResponse[0];
-        if (
-          firstResponse &&
-          firstResponse.data &&
-          firstResponse.totalCount.length > 0
-        ) {
-          metadata['transactionStatus'] = firstResponse.data;
-          if (firstResponse.data.findIndex((x) => x['status'] == 0) >= 0) {
-            wasTransactionSuccess = true;
+      const metadata = {
+        credentialId: credentialDetail.credentialId,
+        persist: credentialDetail.persist,
+        type: credentialDetail.type,
+        issuerDid: credentialDetail.issuerDid,
+        registerCredentialStatus: credentialDetail.registerCredentialStatus,
+      } as ResolveCredentialMetadata;
+      let credentialStatus = undefined;
+      // If user had registered the credential on the blockchain
+      // Only then we will go ahead with credential status retrival
+      const shouldRetriveCredential = credentialDetail.registerCredentialStatus
+        ? credentialDetail.registerCredentialStatus
+        : true; // making default true for backwards compatibility
+      if (shouldRetriveCredential) {
+        /// First check this transaction was successful in lcoal db or there was some error
+        const statusResponse = await this.statusService.findBySsiId(
+          credentialId,
+        );
+        let wasTransactionSuccess = false;
+        if (statusResponse) {
+          const firstResponse = statusResponse[0];
+          if (
+            firstResponse &&
+            firstResponse.data &&
+            firstResponse.totalCount.length > 0
+          ) {
+            metadata['transactionStatus'] = firstResponse.data;
+            if (firstResponse.data.findIndex((x) => x['status'] == 0) >= 0) {
+              wasTransactionSuccess = true;
+            }
           }
         }
-      }
 
-      console.log({ wasTransactionSuccess });
-      /// Retrive status from the blockchain only when status = 0, otherwise skip
-      if (wasTransactionSuccess) {
-        try {
-          const hypersignCredential = new HypersignVerifiableCredential();
-          credentialStatus = await hypersignCredential.resolveCredentialStatus({
-            credentialId,
-          });
-        } catch (e) {
-          credentialStatus = undefined;
+        console.log({ wasTransactionSuccess });
+        /// Retrive status from the blockchain only when status = 0, otherwise skip
+        if (wasTransactionSuccess) {
+          try {
+            const hypersignCredential = new HypersignVerifiableCredential();
+            credentialStatus =
+              await hypersignCredential.resolveCredentialStatus({
+                credentialId,
+              });
+          } catch (e) {
+            credentialStatus = undefined;
+          }
+          Logger.log(
+            'resolveCredential() method: ends....',
+            'CredentialService',
+          );
         }
-        Logger.log('resolveCredential() method: ends....', 'CredentialService');
       }
-    }
 
-    return {
-      credentialDocument: credential ? credential : undefined,
-      credentialStatus,
-      metadata,
-    };
+      return {
+        credentialDocument: credential ? credential : undefined,
+        credentialStatus,
+        metadata,
+      };
+    } finally {
+      this.logEnd('resolveCredential', start);
+    }
   }
 
   async update(
@@ -398,7 +467,10 @@ export class CredentialService {
     updateCredentialDto: UpdateCredentialDto,
     appDetail,
   ) {
-    Logger.log('update() method: starts....', 'CredentialService');
+    const start = this.logStart(
+      'update',
+      'update a credential status on chain or locally',
+    );
 
     const { status, statusReason, issuerDid, verificationMethodId } =
       updateCredentialDto;
@@ -539,11 +611,16 @@ export class CredentialService {
         throw e;
       }
       throw new BadRequestException([e.message]);
+    } finally {
+      this.logEnd('update', start);
     }
   }
 
   async verfiyCredential(verifyCredentialDto: VerifyCredentialDto, appDetail) {
-    Logger.log('verfiyCredential() method: starts....', 'CredentialService');
+    const start = this.logStart(
+      'verfiyCredential',
+      'verify a credential proof using Hypersign verification logic',
+    );
     const { id, issuer } = verifyCredentialDto.credentialDocument;
     const credentialDetail = await this.credentialRepository.findOne({
       appId: appDetail.appId,
@@ -610,9 +687,10 @@ export class CredentialService {
         throw e;
       }
       throw new BadRequestException([e.message]);
+    } finally {
+      Logger.log('verfiyCredential() method: ends....', 'CredentialService');
+      this.logEnd('verfiyCredential', start);
     }
-    Logger.log('verfiyCredential() method: ends....', 'CredentialService');
-
     return verificationResult;
   }
 
@@ -621,9 +699,9 @@ export class CredentialService {
     registerCredentialDto: RegisterCredentialStatusDto,
     appDetail,
   ) {
-    Logger.log(
-      'registerCredentialStatus() method: starts....',
-      'CredentialService',
+    const start = this.logStart(
+      'registerCredentialStatus',
+      'register a credential status entry on chain',
     );
 
     const { credentialStatus, namespace } = registerCredentialDto;
@@ -666,7 +744,7 @@ export class CredentialService {
         );
         await hypersignVC.init();
       }
-      Logger.log(`Address: ${address}`);
+      Logger.debug(`Address: ${address}`);
       const isDevMode = this.config.get('NODE_ENV') === 'development';
       if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendVCTxn(
@@ -690,11 +768,13 @@ export class CredentialService {
         throw e;
       }
       throw new BadRequestException([e.message]);
+    } finally {
+      Logger.log(
+        'registerCredentialStatus() method: ends....',
+        'CredentialService',
+      );
+      this.logEnd('registerCredentialStatus', start);
     }
-    Logger.log(
-      'registerCredentialStatus() method: ends....',
-      'CredentialService',
-    );
     return { transactionHash: registeredVC?.transactionHash };
   }
 }

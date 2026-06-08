@@ -13,46 +13,79 @@ export class CredentialSSIService {
     private readonly config: ConfigService,
     private readonly hidWallet: HidWalletService,
   ) {}
+
+  private logStart(fn: string, description: string) {
+    const start = performance.now();
+    Logger.debug(
+      `Starting ${fn}() - ${description}`,
+      `CredentialSSIService.${fn}`,
+    );
+    return start;
+  }
+
+  private logEnd(fn: string, start: number) {
+    const elapsed = (performance.now() - start).toFixed(2);
+    Logger.debug(
+      `${fn} finished in ${elapsed}ms`,
+      `CredentialSSIService.${fn}`,
+    );
+  }
+
   async initateHypersignVC(
     mnemonic: string,
     namespace: string,
   ): Promise<HypersignVerifiableCredential> {
-    Logger.log('InitateHypersignVC(): starts....', 'CredentialSSIService');
-    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
-    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
-    Logger.log(
-      'InitateHypersignVC() method: before getting offlinesigner',
-      'CredentialSSIService',
+    const start = this.logStart(
+      'initateHypersignVC',
+      'initialize a Hypersign verifiable credential client for Ed25519',
     );
-    await this.hidWallet.generateWallet(mnemonic);
-    const offlineSigner = this.hidWallet.getOfflineSigner();
-    const hypersignVC = new HypersignVerifiableCredential({
-      offlineSigner,
-      nodeRpcEndpoint,
-      nodeRestEndpoint,
-      namespace: namespace,
-    });
+    try {
+      const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+      const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+      Logger.log(
+        'InitateHypersignVC() method: before getting offlinesigner',
+        'CredentialSSIService',
+      );
+      await this.hidWallet.generateWallet(mnemonic);
+      const offlineSigner = this.hidWallet.getOfflineSigner();
+      const hypersignVC = new HypersignVerifiableCredential({
+        offlineSigner,
+        nodeRpcEndpoint,
+        nodeRestEndpoint,
+        namespace: namespace,
+      });
 
-    // await hypersignVC.init();
-    return hypersignVC;
+      // await hypersignVC.init();
+      return hypersignVC;
+    } finally {
+      this.logEnd('initateHypersignVC', start);
+    }
   }
+
   async initateHypersignBjjVC(mnemonic: string, namespace: string) {
-    Logger.log('InitateHypersignVC(): starts....', 'CredentialSSIService');
-    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
-    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
-    Logger.log(
-      'InitateHypersignVC() method: before getting offlinesigner',
-      'CredentialSSIService',
+    const start = this.logStart(
+      'initateHypersignBjjVC',
+      'initialize a Hypersign verifiable credential client for BabyJubJub',
     );
-    await this.hidWallet.generateWallet(mnemonic);
-    const offlineSigner = this.hidWallet.getOfflineSigner();
-    const hypersignVC = new HypersignBJJVerifiableCredential({
-      offlineSigner,
-      nodeRpcEndpoint,
-      nodeRestEndpoint,
-      namespace: namespace,
-    });
-    // await hypersignVC.init();
-    return hypersignVC;
+    try {
+      const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+      const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+      Logger.log(
+        'InitateHypersignVC() method: before getting offlinesigner',
+        'CredentialSSIService',
+      );
+      await this.hidWallet.generateWallet(mnemonic);
+      const offlineSigner = this.hidWallet.getOfflineSigner();
+      const hypersignVC = new HypersignBJJVerifiableCredential({
+        offlineSigner,
+        nodeRpcEndpoint,
+        nodeRestEndpoint,
+        namespace: namespace,
+      });
+      // await hypersignVC.init();
+      return hypersignVC;
+    } finally {
+      this.logEnd('initateHypersignBjjVC', start);
+    }
   }
 }
