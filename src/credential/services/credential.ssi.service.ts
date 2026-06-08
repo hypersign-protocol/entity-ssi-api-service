@@ -16,7 +16,7 @@ export class CredentialSSIService {
 
   private logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(
+    Logger.debug(
       `Starting ${fn}() - ${description}`,
       `CredentialSSIService.${fn}`,
     );
@@ -25,7 +25,10 @@ export class CredentialSSIService {
 
   private logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `CredentialSSIService.${fn}`);
+    Logger.debug(
+      `${fn} finished in ${elapsed}ms`,
+      `CredentialSSIService.${fn}`,
+    );
   }
 
   async initateHypersignVC(

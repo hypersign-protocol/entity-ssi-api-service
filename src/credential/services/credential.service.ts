@@ -45,13 +45,16 @@ export class CredentialService {
 
   private logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(`Starting ${fn}() - ${description}`, `CredentialService.${fn}`);
+    Logger.debug(
+      `Starting ${fn}() - ${description}`,
+      `CredentialService.${fn}`,
+    );
     return start;
   }
 
   private logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `CredentialService.${fn}`);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `CredentialService.${fn}`);
   }
 
   async checkAllowence(address) {
@@ -741,7 +744,7 @@ export class CredentialService {
         );
         await hypersignVC.init();
       }
-      Logger.log(`Address: ${address}`);
+      Logger.debug(`Address: ${address}`);
       const isDevMode = this.config.get('NODE_ENV') === 'development';
       if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendVCTxn(

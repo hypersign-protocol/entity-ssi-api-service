@@ -14,13 +14,13 @@ export class SchemaSSIService {
 
   private logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(`Starting ${fn}() - ${description}`, `SchemaSSIService.${fn}`);
+    Logger.debug(`Starting ${fn}() - ${description}`, `SchemaSSIService.${fn}`);
     return start;
   }
 
   private logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `SchemaSSIService.${fn}`);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `SchemaSSIService.${fn}`);
   }
 
   async initiateHypersignSchema(mnemonic: string, namespace: string) {

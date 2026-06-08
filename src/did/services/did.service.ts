@@ -56,13 +56,13 @@ export class DidService {
 
   private logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(`Starting ${fn}() - ${description}`, `DidService.${fn}`);
+    Logger.debug(`Starting ${fn}() - ${description}`, `DidService.${fn}`);
     return start;
   }
 
   private logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `DidService.${fn}`);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `DidService.${fn}`);
   }
 
   async checkAllowence(address) {
@@ -628,7 +628,7 @@ export class DidService {
         const { wallet, address } = await this.hidWallet.generateWallet(
           appMenemonic,
         );
-        Logger.log(`Address: ${address}`);
+        Logger.debug(`Address: ${address}`);
         const isDevMode = this.config.get('NODE_ENV') === 'development';
         if (!isDevMode && (await this.checkAllowence(address))) {
           await this.txnService.sendDIDTxn(
@@ -810,7 +810,7 @@ export class DidService {
       const { wallet, address } = await this.hidWallet.generateWallet(
         appMenemonic,
       );
-      Logger.log(`Address: ${address}`);
+      Logger.debug(`Address: ${address}`);
       const isDevMode = this.config.get('NODE_ENV') === 'development';
       if (!isDevMode && (await this.checkAllowence(address))) {
         await this.txnService.sendDIDTxn(

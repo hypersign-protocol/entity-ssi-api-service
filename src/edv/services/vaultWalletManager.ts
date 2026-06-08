@@ -29,13 +29,13 @@ export class VaultWallet {
 
   private logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(`Starting ${fn}() - ${description}`, `VaultWallet.${fn}`);
+    Logger.debug(`Starting ${fn}() - ${description}`, `VaultWallet.${fn}`);
     return start;
   }
 
   private logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `VaultWallet.${fn}`);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `VaultWallet.${fn}`);
   }
 
   async Initialize() {
@@ -122,13 +122,13 @@ export class VaultWallet {
 export class VaultWalletManager {
   private static logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(`Starting ${fn}() - ${description}`, `VaultWalletManager.${fn}`);
+    Logger.debug(`Starting ${fn}() - ${description}`, `VaultWalletManager.${fn}`);
     return start;
   }
 
   private static logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `VaultWalletManager.${fn}`);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `VaultWalletManager.${fn}`);
   }
 
   static async getWallet(

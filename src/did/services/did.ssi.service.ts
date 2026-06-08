@@ -12,13 +12,13 @@ export class DidSSIService {
 
   private logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(`Starting ${fn}() - ${description}`, `DidSSIService.${fn}`);
+    Logger.debug(`Starting ${fn}() - ${description}`, `DidSSIService.${fn}`);
     return start;
   }
 
   private logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `DidSSIService.${fn}`);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `DidSSIService.${fn}`);
   }
 
   async initiateHypersignDid(mnemonic: string, namespace: string) {

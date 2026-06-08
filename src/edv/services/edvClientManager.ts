@@ -51,13 +51,13 @@ export class EdvClientManger implements IEdvClientManager {
 
   private logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.log(`Starting ${fn}() - ${description}`, `EdvClientManger.${fn}`);
+    Logger.debug(`Starting ${fn}() - ${description}`, `EdvClientManger.${fn}`);
     return start;
   }
 
   private logEnd(fn: string, start: number) {
     const elapsed = (performance.now() - start).toFixed(2);
-    Logger.log(`${fn} finished in ${elapsed}ms`, `EdvClientManger.${fn}`);
+    Logger.debug(`${fn} finished in ${elapsed}ms`, `EdvClientManger.${fn}`);
   }
 
   async initate(): Promise<IEdvClientManager> {
@@ -78,7 +78,7 @@ export class EdvClientManger implements IEdvClientManager {
       ];
 
       const EDV_BASE_URL = this.config.get('EDV_BASE_URL');
-      Logger.log('EDV_BASE_URL = ' + EDV_BASE_URL, 'edvClientManager');
+      Logger.debug('EDV_BASE_URL = ' + EDV_BASE_URL, 'edvClientManager');
       this.vault = new HypersignEdvClientEd25519VerificationKey2020({
         keyResolver: this.keyResolver,
         url: EDV_BASE_URL,
