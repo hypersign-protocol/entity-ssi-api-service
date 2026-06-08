@@ -122,7 +122,10 @@ export class VaultWallet {
 export class VaultWalletManager {
   private static logStart(fn: string, description: string) {
     const start = performance.now();
-    Logger.debug(`Starting ${fn}() - ${description}`, `VaultWalletManager.${fn}`);
+    Logger.debug(
+      `Starting ${fn}() - ${description}`,
+      `VaultWalletManager.${fn}`,
+    );
     return start;
   }
 
