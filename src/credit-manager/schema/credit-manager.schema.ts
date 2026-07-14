@@ -35,6 +35,8 @@ export class CreditManager {
   credit?: Credit;
   @Prop({ required: false, type: [] })
   creditScope?: Array<string>;
+  @Prop({ required: false, type: String })
+  creditedBy?: string;
 }
 export const CreditManagerSchema = SchemaFactory.createForClass(CreditManager);
 CreditManagerSchema.index({ status: 1 });

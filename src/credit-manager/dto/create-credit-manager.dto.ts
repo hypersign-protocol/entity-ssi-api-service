@@ -21,6 +21,7 @@ export class CreateCreditManagerDto {
   validityDurationUnit: ValidityPeriodUnit;
   serviceId: string;
   creditDenom: string;
+  creditedBy: string;
 }
 
 export class Credit {
