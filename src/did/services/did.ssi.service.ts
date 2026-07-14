@@ -10,73 +10,112 @@ export class DidSSIService {
     private readonly hidWallet: HidWalletService,
   ) {}
 
-  async initiateHypersignDid(mnemonic: string, namespace: string) {
-    Logger.log('InitateHypersignDid(): starts....', 'DidSSIService');
+  private logStart(fn: string, description: string) {
+    const start = performance.now();
+    Logger.log(`Starting ${fn}() - ${description}`, `DidSSIService.${fn}`);
+    return start;
+  }
 
-    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
-    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
-    await this.hidWallet.generateWallet(mnemonic);
-    Logger.log(
-      'initiateHypersignDid() method: before getting offlinesigner',
-      'DidSSIService',
+  private logEnd(fn: string, start: number) {
+    const elapsed = (performance.now() - start).toFixed(2);
+    Logger.log(`${fn} finished in ${elapsed}ms`, `DidSSIService.${fn}`);
+  }
+
+  async initiateHypersignDid(mnemonic: string, namespace: string) {
+    const start = this.logStart(
+      'initiateHypersignDid',
+      'initialize a Hypersign DID instance with a signer from mnemonic',
     );
-    const offlineSigner = this.hidWallet.getOfflineSigner();
-    const hypersignDid = new HypersignDID({
-      offlineSigner,
-      nodeRpcEndpoint,
-      nodeRestEndpoint,
-      namespace: namespace,
-    });
-    await hypersignDid.init();
-    return hypersignDid;
+    try {
+      const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+      const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+      await this.hidWallet.generateWallet(mnemonic);
+      Logger.log(
+        'initiateHypersignDid() method: before getting offlinesigner',
+        'DidSSIService',
+      );
+      const offlineSigner = this.hidWallet.getOfflineSigner();
+      const hypersignDid = new HypersignDID({
+        offlineSigner,
+        nodeRpcEndpoint,
+        nodeRestEndpoint,
+        namespace: namespace,
+      });
+      await hypersignDid.init();
+      return hypersignDid;
+    } finally {
+      this.logEnd('initiateHypersignDid', start);
+    }
   }
 
   async initiateHypersignDidOffline(namespace: string) {
-    Logger.log('InitateHypersignDid(): starts....', 'DidSSIService');
+    const start = this.logStart(
+      'initiateHypersignDidOffline',
+      'initialize a Hypersign DID instance without a local signer',
+    );
+    try {
+      const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+      const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+      const hypersignDid = new HypersignDID({
+        nodeRpcEndpoint,
+        nodeRestEndpoint,
+        namespace: namespace,
+      });
+      return hypersignDid;
+    } finally {
+      this.logEnd('initiateHypersignDidOffline', start);
+    }
+  }
 
-    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
-    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
-    const hypersignDid = new HypersignDID({
-      nodeRpcEndpoint,
-      nodeRestEndpoint,
-      namespace: namespace,
-    });
-    return hypersignDid;
-  }
   async initiateHyperSignBJJDid(mnemonic: string, namespace: string) {
-    Logger.log('InitateHypersignDid(): starts....', 'DidSSIService');
-    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
-    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
-    await this.hidWallet.generateWallet(mnemonic);
-    Logger.log(
-      'initiateHypersignBJJDid() method: before getting offlinesigner',
-      'DidSSIService',
+    const start = this.logStart(
+      'initiateHyperSignBJJDid',
+      'initialize a Hypersign BJJ DID instance with mnemonic signer',
     );
-    const offlineSigner = this.hidWallet.getOfflineSigner();
-    const hsSdk = new HypersignSSISdk({
-      offlineSigner,
-      nodeRpcEndpoint,
-      nodeRestEndpoint,
-      namespace: namespace,
-    });
-    await hsSdk.init();
-    const hypersignBjjDid = hsSdk.did.bjjDID;
-    return hypersignBjjDid;
+    try {
+      const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+      const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+      await this.hidWallet.generateWallet(mnemonic);
+      Logger.log(
+        'initiateHypersignBJJDid() method: before getting offlinesigner',
+        'DidSSIService',
+      );
+      const offlineSigner = this.hidWallet.getOfflineSigner();
+      const hsSdk = new HypersignSSISdk({
+        offlineSigner,
+        nodeRpcEndpoint,
+        nodeRestEndpoint,
+        namespace: namespace,
+      });
+      await hsSdk.init();
+      const hypersignBjjDid = hsSdk.did.bjjDID;
+      return hypersignBjjDid;
+    } finally {
+      this.logEnd('initiateHyperSignBJJDid', start);
+    }
   }
+
   async initiateHyperSignBJJDidOffline(namespace: string) {
-    Logger.log('InitateHypersignDid(): starts....', 'DidSSIService');
-    const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
-    const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
-    Logger.log(
-      'initiateHypersignBJJDid() method: before getting offlinesigner',
-      'DidSSIService',
+    const start = this.logStart(
+      'initiateHyperSignBJJDidOffline',
+      'initialize a Hypersign BJJ DID instance without wallet signer',
     );
-    const hypersignDid = new HypersignDID({
-      nodeRpcEndpoint,
-      nodeRestEndpoint,
-      namespace: namespace,
-    });
-    const hypersignBjjDid = hypersignDid.bjjDID;
-    return hypersignBjjDid;
+    try {
+      const nodeRpcEndpoint = this.config.get('HID_NETWORK_RPC');
+      const nodeRestEndpoint = this.config.get('HID_NETWORK_API');
+      Logger.log(
+        'initiateHypersignBJJDid() method: before getting offlinesigner',
+        'DidSSIService',
+      );
+      const hypersignDid = new HypersignDID({
+        nodeRpcEndpoint,
+        nodeRestEndpoint,
+        namespace: namespace,
+      });
+      const hypersignBjjDid = hypersignDid.bjjDID;
+      return hypersignBjjDid;
+    } finally {
+      this.logEnd('initiateHyperSignBJJDidOffline', start);
+    }
   }
 }

@@ -25,9 +25,7 @@ export class ReduceCreditGuard implements CanActivate {
 
     //Check if the user has a valid plan with enough balance
     const creditDetails = await this.creditManagerService.hasValidCredit(req);
-    const activeCredit = await this.creditService.getActiveCredit(
-      String(creditDetails.attestationCost.hidCost),
-    );
+    const activeCredit = creditDetails.activeCredit;
     if (!creditDetails['hasSufficientFund']) {
       Logger.error(
         'User does not have a valid plan or enough credits',
@@ -51,14 +49,24 @@ export class ReduceCreditGuard implements CanActivate {
           return;
         }
         try {
+          // Ensure we have an active credit plan to deduct from
+          if (!activeCredit) {
+            Logger.error(
+              'No active credit plan available to deduct from.',
+              'ReduceCreditGuard',
+            );
+            return;
+          }
+
           let remainingCreditsNeeded = creditDetails.creditAmountRequired;
           let remainingHIDNeeded = Number(
             creditDetails.attestationCost.hidCost,
           );
           const availableCredits =
-            activeCredit.totalCredits - activeCredit.used;
+            (activeCredit?.totalCredits ?? 0) - (activeCredit?.used ?? 0);
           const availableHID =
-            Number(activeCredit.credit.amount) - activeCredit.credit.used;
+            Number(activeCredit?.credit?.amount ?? 0) -
+            (activeCredit?.credit?.used ?? 0);
           if (
             availableCredits < remainingCreditsNeeded ||
             availableHID < remainingHIDNeeded
@@ -71,7 +79,7 @@ export class ReduceCreditGuard implements CanActivate {
             remainingCreditsNeeded -= deductedCredits;
             remainingHIDNeeded -= deductedHID;
 
-            if (remainingCreditsNeeded > 0) {
+            if (remainingCreditsNeeded > 0 || remainingHIDNeeded > 0) {
               const inactiveCreditPlan =
                 await this.creditService.getNextAvailableCredit(
                   `${remainingHIDNeeded}`,
@@ -115,6 +123,7 @@ export class ReduceCreditGuard implements CanActivate {
                   'No inactive credit plan available to activate.',
                   'ReduceCreditGuard',
                 );
+                return;
               }
             }
           } else {
@@ -131,7 +140,7 @@ export class ReduceCreditGuard implements CanActivate {
             );
           }
           Logger.log('Credits deducted successfully', 'ReduceCreditGuard');
-        } catch (error) {
+        } catch (error: any) {
           Logger.error(
             'Error deducting credits: ' + error.message,
             'ReduceCreditGuard',
