@@ -54,6 +54,7 @@ export class CreditAuthGuard implements CanActivate {
         payload['validityPeriodUnit'] || ValidityPeriodUnit.DAYS,
       serviceId: payload['serviceId'],
       creditDenom: payload['amountDenom'] || 'uHID',
+      creditedBy: payload['creditedBy'],
     };
     request['creditDetail'] = creditDetail;
     return true;

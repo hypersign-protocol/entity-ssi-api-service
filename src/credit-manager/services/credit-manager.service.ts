@@ -111,7 +111,7 @@ export class CreditService {
           expiresAt: 1,
         },
       },
-      { $project: { expiresAtExists: 0 } },
+      { $project: { expiresAtExists: 0, creditedBy: 0 } },
     ];
     return this.creditRepository.findBasedOnAggregationPipeline(pipeline);
   }
