@@ -187,3 +187,8 @@ export class CreditManagerRequestDto {
   @IsString()
   creditScope: Array<string>;
 }
+
+export enum CreditNotificationJobNames {
+  CREDIT_USAGE = 'credit-usage-notification',
+  CREDIT_EXPIRY = 'credit-expiry-notification',
+}

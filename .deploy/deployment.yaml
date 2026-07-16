@@ -70,6 +70,12 @@ spec:
           value: __NODE_ENV__
         - name: WHITELISTED_CORS
           value: "['https://entity.hypersign.id','https://api.entity.hypersign.id','https://api.entity-test.hypersign.id','https://wallet-prajna.hypersign.id']"
+        - name: CREDIT_USAGE_THRESHOLDS
+          value: __CREDIT_USAGE_THRESHOLDS__  
+        - name: CREDIT_EXPIRY_THRESHOLDS
+          value: __CREDIT_EXPIRY_THRESHOLDS__  
+        - name: DASHBOARD_NOTIFICATION_QUEUE
+          value: __DASHBOARD_NOTIFICATION_QUEUE__
         volumeMounts:
         - name: mongo
           mountPath: "/data"
