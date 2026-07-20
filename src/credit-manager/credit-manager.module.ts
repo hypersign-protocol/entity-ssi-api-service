@@ -10,9 +10,10 @@ import { ApiCreditService } from './services/api-credit.service';
 import { StorageCreditService } from './services/storage-credit.service';
 import { AttestationCreditService } from './services/attestation-credit.service';
 import { WhitelistSSICorsMiddleware } from 'src/utils/middleware/cors.middleware';
+import { MailClientModule } from 'src/mailClient/mail-client.module';
 
 @Module({
-  imports: [],
+  imports: [MailClientModule],
   controllers: [CreditManagerController],
   providers: [
     CreditService,

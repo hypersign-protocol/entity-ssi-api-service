@@ -43,6 +43,10 @@ services:
       SUPER_ADMIN_PASSWORD: "root"
       SESSION_SECRET_KEY: "43bf9ba55e72565d"
       NODE_ENV: "production"
+      CREDIT_USAGE_THRESHOLDS:90,100
+      CREDIT_EXPIRY_THRESHOLDS:7,0
+      DASHBOARD_NOTIFICATION_QUEUE:Credit-Usage-Notification-Queue
+
     depends_on:
       - "issuer-database"
       - "edv.entity.id"

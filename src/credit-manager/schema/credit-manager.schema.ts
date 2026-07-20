@@ -10,6 +10,13 @@ export class Credit {
   @Prop({ required: true, type: String, default: 'uHID' })
   denom?: string;
 }
+export class Notifications {
+  @Prop({ type: Number, required: false, default: 0 })
+  lastNotifiedUsageThreshold: number;
+  @Prop({ type: Number, required: false })
+  expiryThresholdsSent: number;
+}
+
 @Schema({ timestamps: true })
 export class CreditManager {
   @Prop({ required: true, type: Number })
@@ -37,6 +44,9 @@ export class CreditManager {
   creditScope?: Array<string>;
   @Prop({ required: false, type: String })
   creditedBy?: string;
+  @Prop({ required: false, type: Notifications })
+  notification?: Notifications;
 }
+
 export const CreditManagerSchema = SchemaFactory.createForClass(CreditManager);
 CreditManagerSchema.index({ status: 1 });
