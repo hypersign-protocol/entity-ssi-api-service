@@ -270,6 +270,23 @@ export class CreditService {
         }
       }
       if (!thresholdToNotify) return;
+      // 🚀 Push job to BullMQ
+      const notificationQueue =
+        this.configService.get('DASHBOARD_NOTIFICATION_QUEUE') ||
+        'Credit-Usage-Notification-Queue';
+      await this.mailClientService.addAJob<CreditUsageNotificationJob>(
+        {
+          serviceId: plan.serviceId,
+          totalCredits: plan.totalCredits,
+          usedCredits: plan.used,
+          usedPercentage,
+          threshold: thresholdToNotify,
+          expiresAt: plan.expiresAt?.toISOString(),
+        },
+        notificationQueue,
+        CreditNotificationJobNames.CREDIT_USAGE,
+      );
+
       const updatedResult = await this.creditRepository.updateCreditDetail(
         {
           serviceId,
@@ -299,23 +316,6 @@ export class CreditService {
         );
         return;
       }
-
-      // 🚀 Push job to BullMQ
-      const notificationQueue =
-        this.configService.get('DASHBOARD_NOTIFICATION_QUEUE') ||
-        'Credit-Usage-Notification-Queue';
-      await this.mailClientService.addAJob<CreditUsageNotificationJob>(
-        {
-          serviceId: plan.serviceId,
-          totalCredits: plan.totalCredits,
-          usedCredits: plan.used,
-          usedPercentage,
-          threshold: thresholdToNotify,
-          expiresAt: plan.expiresAt?.toISOString(),
-        },
-        notificationQueue,
-        CreditNotificationJobNames.CREDIT_USAGE,
-      );
     } catch (e: any) {
       Logger.error(
         `Failed to trigger usage notification for serviceId: ${plan.serviceId}`,
@@ -353,6 +353,22 @@ export class CreditService {
         }
       }
       if (thresholdToNotify === null) return;
+      const notificationQueue =
+        this.configService.get('DASHBOARD_NOTIFICATION_QUEUE') ||
+        'Credit-Notification-Queue';
+
+      await this.mailClientService.addAJob(
+        {
+          serviceId: plan.serviceId,
+          totalCredits: plan.totalCredits,
+          usedCredits: plan.used,
+          expiresAt: plan.expiresAt.toISOString(),
+          remainingDays,
+          threshold: thresholdToNotify,
+        },
+        notificationQueue,
+        CreditNotificationJobNames.CREDIT_EXPIRY,
+      );
       const updatedResult = await this.creditRepository.updateCreditDetail(
         {
           serviceId: plan.serviceId,
@@ -376,30 +392,12 @@ export class CreditService {
           },
         },
       );
-
       if (!updatedResult) {
         Logger.log(
           `Skipping credit expiry notification | serviceId=${plan.serviceId} | threshold=${thresholdToNotify} | Reason: Already notified or no active plan found`,
         );
         return;
       }
-
-      const notificationQueue =
-        this.configService.get('DASHBOARD_NOTIFICATION_QUEUE') ||
-        'Credit-Notification-Queue';
-
-      await this.mailClientService.addAJob(
-        {
-          serviceId: plan.serviceId,
-          totalCredits: plan.totalCredits,
-          usedCredits: plan.used,
-          expiresAt: plan.expiresAt.toISOString(),
-          remainingDays,
-          threshold: thresholdToNotify,
-        },
-        notificationQueue,
-        CreditNotificationJobNames.CREDIT_EXPIRY,
-      );
     } catch (e: any) {
       Logger.error(
         `Failed to trigger expiry notification for serviceId: ${plan.serviceId}`,
