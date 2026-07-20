@@ -1,4 +1,10 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  InternalServerErrorException,
+  NotImplementedException,
+} from '@nestjs/common';
 import { MailClientService } from '../service/mail-client.service';
 
 @Controller('mail-client')
@@ -10,7 +16,8 @@ export class MailClientController {
     @Body()
     data: { serverName: string; to: string; subject: string; message: any }[],
   ) {
-    await this.bullQueueService.addJobsInBulk(data);
-    return { message: 'Jobs are added to the queue successfully' };
+    throw new NotImplementedException([
+      'Add job functionality is not implemented yet',
+    ]);
   }
 }
