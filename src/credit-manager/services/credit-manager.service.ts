@@ -18,11 +18,28 @@ import { CreditUsageNotificationJob } from 'src/mailClient/dto/create-email.dto'
 
 @Injectable()
 export class CreditService {
+  private readonly creditExpiryThresholds: number[];
+  private readonly creditUsageThresholds: number[];
   constructor(
     private readonly creditRepository: CreditManagerRepository,
     private readonly configService: ConfigService,
     private readonly mailClientService: MailClientService,
-  ) {}
+  ) {
+    this.creditExpiryThresholds =
+      this.configService
+        .get<string>('CREDIT_EXPIRY_THRESHOLDS')
+        ?.split(',')
+        .map((threshold) => Number(threshold.trim()))
+        .filter((threshold) => !isNaN(threshold))
+        .sort((a, b) => b - a) ?? [];
+    this.creditUsageThresholds =
+      this.configService
+        .get<string>('CREDIT_USAGE_THRESHOLDS')
+        ?.split(',')
+        .map((threshold) => Number(threshold.trim()))
+        .filter((threshold) => !isNaN(threshold))
+        .sort((a, b) => a - b) ?? [];
+  }
   async addCreditDetail(
     body: CreditManagerRequestDto,
     createCreditManagerDto: CreateCreditManagerDto,
@@ -243,17 +260,11 @@ export class CreditService {
       if (!totalCredits || totalCredits <= 0) return;
       const usedCredits = used || 0;
       const usedPercentage = Math.floor((usedCredits / totalCredits) * 100);
-      const thresholds = this.configService
-        .get<string>('CREDIT_USAGE_THRESHOLDS')
-        ?.split(',')
-        .map((t) => Number(t.trim()))
-        .filter((t) => !isNaN(t))
-        .sort((a, b) => a - b);
-      if (!thresholds || thresholds.length === 0) return;
+      if (this.creditUsageThresholds.length === 0) return;
       let thresholdToNotify: number | null = null;
       const lastNotifiedThreshold =
         plan.notification?.lastNotifiedUsageThreshold || 0;
-      for (const threshold of thresholds) {
+      for (const threshold of this.creditUsageThresholds) {
         if (usedPercentage >= threshold && threshold > lastNotifiedThreshold) {
           thresholdToNotify = threshold;
         }
@@ -326,20 +337,13 @@ export class CreditService {
         ),
         0,
       );
-      const thresholds = this.configService
-        .get<string>('CREDIT_EXPIRY_THRESHOLDS')
-        ?.split(',')
-        .map((t) => Number(t.trim()))
-        .filter((t) => !isNaN(t))
-        .sort((a, b) => b - a);
-
-      if (!thresholds || thresholds.length === 0) return;
+      if (this.creditExpiryThresholds.length === 0) return;
 
       const lastThreshold = plan.notification?.expiryThresholdsSent;
 
       let thresholdToNotify: number | null = null;
 
-      for (const threshold of thresholds) {
+      for (const threshold of this.creditExpiryThresholds) {
         if (
           remainingDays <= threshold &&
           (lastThreshold === undefined || threshold < lastThreshold)
@@ -412,7 +416,7 @@ export class CreditService {
       return;
     }
 
-    await this.checkAndTriggerUsageNotification(plan);
-    await this.checkAndTriggerExpiryNotification(plan);
+    this.checkAndTriggerUsageNotification(plan);
+    this.checkAndTriggerExpiryNotification(plan);
   }
 }
