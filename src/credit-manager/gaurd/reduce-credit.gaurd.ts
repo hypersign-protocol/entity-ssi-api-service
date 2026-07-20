@@ -100,16 +100,9 @@ export class ReduceCreditGuard implements CanActivate {
                     status: 'Inactive',
                   },
                 );
-                try {
-                  await this.creditService.checkAndTriggerNotifications(
-                    activeCredit._id.toString(),
-                  );
-                } catch (err: any) {
-                  Logger.error(
-                    'Failed to trigger credit notifications',
-                    err?.stack || err,
-                  );
-                }
+                void this.creditService.checkAndTriggerNotifications(
+                  activeCredit._id.toString(),
+                );
                 Logger.log(
                   `Deducted ${deductedCredits} credits and ${deductedHID} HID from active plan`,
                   'ReduceCreditGuard',
@@ -123,16 +116,9 @@ export class ReduceCreditGuard implements CanActivate {
                     },
                   },
                 );
-                try {
-                  await this.creditService.checkAndTriggerNotifications(
-                    inactiveCreditPlan._id.toString(),
-                  );
-                } catch (err: any) {
-                  Logger.error(
-                    'Failed to trigger credit notifications',
-                    err?.stack || err,
-                  );
-                }
+                void this.creditService.checkAndTriggerNotifications(
+                  inactiveCreditPlan._id.toString(),
+                );
                 Logger.log(
                   `Deducted remaining ${remainingCreditsNeeded} credits from new plan`,
                   'ReduceCreditGuard',
@@ -158,16 +144,9 @@ export class ReduceCreditGuard implements CanActivate {
                 },
               },
             );
-            try {
-              await this.creditService.checkAndTriggerNotifications(
-                activeCredit._id.toString(),
-              );
-            } catch (err: any) {
-              Logger.error(
-                'Failed to trigger credit notifications',
-                err?.stack || err,
-              );
-            }
+            void this.creditService.checkAndTriggerNotifications(
+              activeCredit._id.toString(),
+            );
           }
           Logger.log('Credits deducted successfully', 'ReduceCreditGuard');
         } catch (error: any) {

@@ -406,15 +406,20 @@ export class CreditService {
     }
   }
   async checkAndTriggerNotifications(planId: string) {
-    const plan = await this.creditRepository.findParticularCreditDetail({
-      _id: planId,
-    });
+    try {
+      const plan = await this.creditRepository.findParticularCreditDetail({
+        _id: planId,
+      });
 
-    if (!plan) {
-      return;
+      if (!plan) return;
+
+      void this.checkAndTriggerUsageNotification(plan);
+      void this.checkAndTriggerExpiryNotification(plan);
+    } catch (e: any) {
+      Logger.error(
+        `Failed to trigger credit notifications for planId: ${planId}`,
+        e?.stack || e,
+      );
     }
-
-    this.checkAndTriggerUsageNotification(plan);
-    this.checkAndTriggerExpiryNotification(plan);
   }
 }
