@@ -236,15 +236,17 @@ export class SchemaService {
       return tempResolvedDid;
     }
 
-    try {
-      resolvedSchema.schema.properties = JSON.parse(
-        resolvedSchema.schema?.properties,
-      );
-    } catch (e) {
-      Logger.log(
-        'resolveSchema() method: Error in parsing schema properties',
-        'SchemaService',
-      );
+    if (typeof resolvedSchema.schema.properties === 'string') {
+      try {
+        resolvedSchema.schema.properties = JSON.parse(
+          resolvedSchema.schema.properties,
+        );
+      } catch (e) {
+        Logger.log(
+          'resolveSchema() method: Error in parsing schema properties',
+          'SchemaService',
+        );
+      }
     }
     Logger.log('resolveSchema() method: ends....', 'SchemaService');
 
