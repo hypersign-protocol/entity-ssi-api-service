@@ -1,6 +1,6 @@
 {
   "name": "entity-api-service",
-  "version": "3.13.0",
+  "version": "3.13.1",
   "description": "A SSI API service built on multi tenant architeacture",
   "author": "Vishwas",
   "private": true,
