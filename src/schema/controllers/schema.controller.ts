@@ -41,15 +41,15 @@ import { SchemaResponseInterceptor } from '../interceptors/transformResponse.int
 import { GetSchemaList } from '../dto/get-schema.dto';
 import { RegisterSchemaDto } from '../dto/register-schema.dto';
 import { TxnHash } from 'src/did/dto/create-did.dto';
-import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
 import { AccessGuard } from 'src/utils/guards/access.gaurd';
 import { Access } from 'src/utils/customDecorator/access.decorator';
 import { ACCESS_TYPES } from 'src/credit-manager/utils';
+import { getBlockchainCreditContext } from 'src/credit-transaction-context';
 @UseFilters(AllExceptionsFilter)
 @ApiTags('Schema')
 @Controller('schema')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'), ReduceCreditGuard, AccessGuard)
+@UseGuards(AuthGuard('jwt'), AccessGuard)
 export class SchemaController {
   constructor(private readonly schemaService: SchemaService) {}
   @Access(ACCESS_TYPES.WRITE_SCHEMA)
@@ -85,8 +85,11 @@ export class SchemaController {
     @Req() req: any,
   ) {
     Logger.log('create() method: starts', 'SchemaController');
-    const appDetail = req.user;
-    return this.schemaService.create(createSchemaDto, appDetail);
+    return this.schemaService.create(
+      createSchemaDto,
+      req.user,
+      getBlockchainCreditContext(req),
+    );
   }
   @UsePipes(new ValidationPipe({ transform: true }))
   @Access(ACCESS_TYPES.READ_SCHEMA)
@@ -198,6 +201,10 @@ export class SchemaController {
   ): Promise<{ transactionHash: string }> {
     Logger.log('resolveSchema() method: starts', 'SchemaController');
 
-    return this.schemaService.registerSchema(registerSchemaDto, req.user);
+    return this.schemaService.registerSchema(
+      registerSchemaDto,
+      req.user,
+      getBlockchainCreditContext(req),
+    );
   }
 }

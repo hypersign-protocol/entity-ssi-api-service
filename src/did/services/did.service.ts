@@ -532,6 +532,7 @@ export class DidService {
   async register(
     registerDidDto: RegisterDidDto,
     appDetail,
+    creditTransaction?,
   ): Promise<RegisterDidResponse> {
     const start = this.logStart(
       'register',
@@ -637,6 +638,7 @@ export class DidService {
             verificationMethodId,
             appMenemonic,
             appDetail,
+            creditTransaction,
           );
         } else {
           registerDidDoc = await hypersignDid.register(params);
@@ -676,6 +678,7 @@ export class DidService {
   async registerV2(
     registerV2DidDto: RegisterV2DidDto,
     appDetail, // : Promise<RegisterDidResponse>
+    creditTransaction?,
   ) {
     const start = this.logStart(
       'registerV2',
@@ -819,6 +822,7 @@ export class DidService {
           registerV2DidDto.signInfos,
           appMenemonic,
           appDetail,
+          creditTransaction,
         );
       } else {
         registerDidDoc = await hypersignDid.registerByClientSpec({

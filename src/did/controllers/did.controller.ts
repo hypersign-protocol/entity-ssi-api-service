@@ -56,10 +56,10 @@ import { AtLeastOneParamPipe } from 'src/utils/Pipes/atleastOneParam.pipe';
 import { AddVMResponse, AddVerificationMethodDto } from '../dto/addVm.dto';
 import { SignDidDto, SignedDidDocument } from '../dto/sign-did.dto';
 import { VerifyDidDocResponseDto, VerifyDidDto } from '../dto/verify-did.dto';
-import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
 import { AccessGuard } from 'src/utils/guards/access.gaurd';
 import { Access } from 'src/utils/customDecorator/access.decorator';
 import { ACCESS_TYPES } from 'src/credit-manager/utils';
+import { getBlockchainCreditContext } from 'src/credit-transaction-context';
 import {
   IssueDidJwtDto,
   IssueDidJwtResponseDto,
@@ -68,7 +68,7 @@ import {
 @ApiTags('Did')
 @Controller('did')
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'), ReduceCreditGuard, AccessGuard)
+@UseGuards(AuthGuard('jwt'), AccessGuard)
 export class DidController {
   constructor(private readonly didService: DidService) {}
 
@@ -346,8 +346,11 @@ export class DidController {
   ) {
     Logger.log('register() method: starts', 'DidController');
 
-    const appDetail = req.user;
-    return this.didService.register(registerDidDto, appDetail);
+    return this.didService.register(
+      registerDidDto,
+      req.user,
+      getBlockchainCreditContext(req),
+    );
   }
   @Access(ACCESS_TYPES.WRITE_DID)
   @Patch()
@@ -415,8 +418,11 @@ export class DidController {
     @Req() req: any,
   ) {
     Logger.log('registerV2() method: starts', 'DidController');
-    const appDetail = req.user;
-    return this.didService.registerV2(registerV2Dto, appDetail);
+    return this.didService.registerV2(
+      registerV2Dto,
+      req.user,
+      getBlockchainCreditContext(req),
+    );
   }
   @ApiOkResponse({
     description: 'DID Jwt generated successfully',

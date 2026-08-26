@@ -463,6 +463,7 @@ export class CredentialService {
     id: string,
     updateCredentialDto: UpdateCredentialDto,
     appDetail,
+    creditTransaction?,
   ) {
     const start = this.logStart(
       'update',
@@ -576,6 +577,7 @@ export class CredentialService {
           updateCredenital?.proofValue,
           appMenemonic,
           appDetail,
+          creditTransaction,
         );
       } else {
         updatedCredResult = await hypersignVC.updateCredentialStatus({
@@ -695,6 +697,7 @@ export class CredentialService {
   async registerCredentialStatus(
     registerCredentialDto: RegisterCredentialStatusDto,
     appDetail,
+    creditTransaction?,
   ) {
     const start = this.logStart(
       'registerCredentialStatus',
@@ -749,6 +752,7 @@ export class CredentialService {
           proof,
           appMenemonic,
           appDetail,
+          creditTransaction,
         );
       } else {
         registeredVC = await hypersignVC.registerCredentialStatus({
