@@ -65,7 +65,7 @@ import { CreditRecoveryScheduler } from './credit-recovery.scheduler';
               creditType: CreditType.API_CREDIT,
             },
             requestId: request.requestId,
-            environment: CreditEnvironment.PROD,
+            environment,
           };
         },
       }),
