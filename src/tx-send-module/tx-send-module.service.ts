@@ -73,8 +73,7 @@ export class TxSendModuleService {
         this.configService.get('Tx_Query_API') ||
         'https://api.atman.hypersign.id/cosmos/tx/v1beta1/txs/',
       SSI_TXN_RESULT_EXCHANGE:
-        this.configService.get('SSI_TXN_RESULT_EXCHANGE') ||
-        'ssi.txn.results',
+        this.configService.get('SSI_TXN_RESULT_EXCHANGE') || 'ssi.txn.results',
     };
 
     await this.channel.assertQueue('GLOBAL_TXN_CONTROLLER_QUEUE', {

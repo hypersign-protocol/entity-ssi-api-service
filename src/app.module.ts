@@ -25,7 +25,7 @@ import {
   CreditModule,
   CreditType,
 } from '@hypersign-protocol/credit-middleware';
-import { CreditInfrastructureModule } from './credit-infrastructure.module';
+import { RedisModule } from './redis.module';
 import { CreditRecoveryScheduler } from './credit-recovery.scheduler';
 // import { QueueMonitorModule } from './queue-monitor/queue-monitor.module';
 @Module({
@@ -35,9 +35,9 @@ import { CreditRecoveryScheduler } from './credit-recovery.scheduler';
       envFilePath: '',
       isGlobal: true,
     }),
-    CreditInfrastructureModule,
+    RedisModule,
     CreditModule.forRootAsync({
-      imports: [CreditInfrastructureModule],
+      imports: [RedisModule],
       useFactory: () => ({
         requestContextResolver: (unknownRequest: unknown) => {
           const request = unknownRequest as {

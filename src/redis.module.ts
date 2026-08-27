@@ -48,4 +48,4 @@ class CreditRedisShutdown implements OnApplicationShutdown {
   ],
   exports: [CREDIT_REDIS_CLIENT],
 })
-export class CreditInfrastructureModule {}
+export class RedisModule {}
