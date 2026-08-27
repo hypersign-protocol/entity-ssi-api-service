@@ -29,7 +29,7 @@
     "@cosmjs/crypto": "^0.29.5",
     "@digitalbazaar/ed25519-verification-key-2020": "^3.3.0",
     "@digitalbazaar/x25519-key-agreement-key-2020": "^2.1.0",
-    "@hypersign-protocol/credit-middleware": "file:../nestjs-interceptor/hypersign-protocol-credit-middleware-5.0.0-ssi.tgz",
+    "@hypersign-protocol/credit-middleware": "https://github.com/hypersign-protocol/hypersign-credits-middleware/releases/download/v5.0.0/hypersign-protocol-credit-middleware-5.0.0-ssi.tgz",
     "@nestjs/common": "^9.0.0",
     "@nestjs/config": "^2.2.0",
     "@nestjs/core": "^9.0.0",
