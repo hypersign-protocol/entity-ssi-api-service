@@ -180,7 +180,11 @@ export class CredentialController {
     @Req() req,
   ) {
     Logger.log('CredentialController:: create() method: starts....');
-    return this.credentialService.create(createCredentialDto, req.user);
+    return this.credentialService.create(
+      createCredentialDto,
+      req.user,
+      getBlockchainCreditContext(req),
+    );
   }
   @UsePipes(ValidationPipe)
   @HttpCode(200)

@@ -1,6 +1,6 @@
 {
   "serviceType": "SSI_API",
-  "version": "3.7.2",
+  "version": "3.7.3",
   "globalPrefix": "api/v1",
   "versioning": "NONE",
   "uriVersionPrefix": "v",
@@ -36,6 +36,19 @@
           "id": "api",
           "creditType": "API_CREDIT",
           "amount": 5
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 2000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false,
+          "when": {
+            "source": "body",
+            "path": "registerCredentialStatus",
+            "operator": "notEquals",
+            "value": false
+          }
         }
       ]
     },
@@ -125,6 +138,18 @@
           "id": "api",
           "creditType": "API_CREDIT",
           "amount": 3
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 1000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false,
+          "when": {
+            "source": "body",
+            "path": "verificationMethodId",
+            "operator": "exists"
+          }
         }
       ]
     },

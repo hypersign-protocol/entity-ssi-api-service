@@ -392,7 +392,46 @@ function validateCharge(value, field) {
     }
     charge.autoRecover = value.autoRecover;
   }
+  if (value.when !== undefined) {
+    charge.when = validateCondition(value.when, `${field}.when`);
+  }
   return charge;
+}
+
+function validateCondition(value, field) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error(`${field} must be an object`);
+  }
+  if (value.source !== 'body') throw new Error(`${field}.source must be body`);
+  const conditionPath = requiredString(value.path, `${field}.path`);
+  const safeSegments = conditionPath.split('.').every((segment) =>
+    /^[A-Za-z0-9_-]+$/.test(segment) &&
+    !['__proto__', 'prototype', 'constructor'].includes(segment));
+  if (!safeSegments) throw new Error(`${field}.path must be a safe property path`);
+  if (!['equals', 'notEquals', 'exists'].includes(value.operator)) {
+    throw new Error(`${field}.operator must be equals, notEquals, or exists`);
+  }
+  const hasValue = Object.prototype.hasOwnProperty.call(value, 'value');
+  if (value.operator === 'exists') {
+    if (hasValue) throw new Error(`${field}.value must be omitted for exists`);
+    return {
+      source: value.source,
+      path: conditionPath,
+      operator: value.operator,
+    };
+  }
+  const valueType = typeof value.value;
+  if (!hasValue || (value.value !== null &&
+      !['string', 'number', 'boolean'].includes(valueType)) ||
+      (valueType === 'number' && !Number.isFinite(value.value))) {
+    throw new Error(`${field}.value must be a string, number, boolean, or null`);
+  }
+  return {
+    source: value.source,
+    path: conditionPath,
+    operator: value.operator,
+    value: value.value,
+  };
 }
 
 function controllerMetadata(ts, decorator, file) {

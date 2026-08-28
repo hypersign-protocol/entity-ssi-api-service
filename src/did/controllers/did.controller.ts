@@ -388,7 +388,11 @@ export class DidController {
     Logger.log('updateDid() method: starts', 'DidController');
 
     const appDetail = req.user;
-    return this.didService.updateDid(updateDidDto, appDetail);
+    return this.didService.updateDid(
+      updateDidDto,
+      appDetail,
+      getBlockchainCreditContext(req),
+    );
   }
   @ApiOkResponse({
     description: 'DID Registred',

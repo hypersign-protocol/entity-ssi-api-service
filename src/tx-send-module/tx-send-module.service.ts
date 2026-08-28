@@ -345,6 +345,7 @@ export class TxSendModuleService {
     versionId: any,
     granteeMnemonic: any,
     appDetail,
+    creditTransaction?,
   ) {
     Logger.log(
       'Inside  sendDIDDeactivate to deactivate the did.',
@@ -394,7 +395,11 @@ export class TxSendModuleService {
       durable: false,
     });
 
-    const data = this.transactionQueueMessage('DID_DEACTIVATE', txMsg);
+    const data = this.transactionQueueMessage(
+      'DID_DEACTIVATE',
+      txMsg,
+      creditTransaction,
+    );
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
       Buffer.from(JSON.stringify(data)),
@@ -422,6 +427,7 @@ export class TxSendModuleService {
     versionId,
     granteeMnemonic,
     appDetail,
+    creditTransaction?,
   ) {
     if (!this.channel) {
       await this.connect();
@@ -465,7 +471,11 @@ export class TxSendModuleService {
       durable: false,
     });
 
-    const data = this.transactionQueueMessage('DID_UPDATE', txMsg);
+    const data = this.transactionQueueMessage(
+      'DID_UPDATE',
+      txMsg,
+      creditTransaction,
+    );
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
       Buffer.from(JSON.stringify(data)),

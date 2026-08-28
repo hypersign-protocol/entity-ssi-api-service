@@ -996,6 +996,7 @@ export class DidService {
   async updateDid(
     updateDidDto: UpdateDidDto,
     appDetail,
+    creditTransaction?,
   ): Promise<{
     transactionHash?: string;
     didDocument?: Did;
@@ -1032,6 +1033,11 @@ export class DidService {
           updateDidDto.didDocument.keyAgreement = [];
         }
         if (!updateDidDto.verificationMethodId) {
+          if (creditTransaction) {
+            throw new BadRequestException([
+              'verificationMethodId is required for delegated blockchain billing',
+            ]);
+          }
           const did = updateDidDto.didDocument['id'];
           const { edvId, kmsId } = appDetail;
           const mnemonic = await getAppMenemonic(kmsId);
@@ -1163,7 +1169,13 @@ export class DidService {
                 'DidService',
               );
 
-              if ((await this.checkAllowence(address)) == false) {
+              const hasAllowance = await this.checkAllowence(address);
+              if (hasAllowance == false) {
+                if (creditTransaction) {
+                  throw new BadRequestException([
+                    'Blockchain fee allowance is unavailable for this application',
+                  ]);
+                }
                 updatedDid = await hypersignDid.update({
                   didDocument: updateDidDto.didDocument as Did,
                   privateKeyMultibase,
@@ -1185,6 +1197,7 @@ export class DidService {
                   updatedDid.versionId,
                   appMenemonic,
                   appDetail,
+                  creditTransaction,
                 );
               }
             } else {
@@ -1193,7 +1206,13 @@ export class DidService {
                 'DidService',
               );
 
-              if ((await this.checkAllowence(address)) == false) {
+              const hasAllowance = await this.checkAllowence(address);
+              if (hasAllowance == false) {
+                if (creditTransaction) {
+                  throw new BadRequestException([
+                    'Blockchain fee allowance is unavailable for this application',
+                  ]);
+                }
                 updatedDid = await hypersignDid.deactivate({
                   didDocument: updateDidDto.didDocument as Did,
                   privateKeyMultibase,
@@ -1218,6 +1237,7 @@ export class DidService {
                   updatedDid.versionId,
                   appMenemonic,
                   appDetail,
+                  creditTransaction,
                 );
               }
             }

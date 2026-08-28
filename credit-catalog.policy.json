@@ -1,6 +1,6 @@
 {
   "serviceType": "SSI_API",
-  "version": "3.7.2",
+  "version": "3.7.3",
   "globalPrefix": "api/v1",
   "versioning": "NONE",
   "uriVersionPrefix": "v",
@@ -8,14 +8,14 @@
   "pricingNotes": [
     "API_CREDIT is committed automatically after a successful HTTP handler.",
     "Deterministic on-chain routes reserve their fixed uhid fee as BLOCKCHAIN_TXN_CREDIT with DEFERRED settlement and autoRecover disabled; the transaction processor must explicitly commit or roll it back from the chain result.",
-    "POST /api/v1/credential/issue always catalogs its 5 API_CREDIT base cost. When persist=true, application code must reserve and immediately settle another 4 API_CREDIT. When registerCredentialStatus=true (the current default), application code must reserve 5 API_CREDIT plus 2000 deferred BLOCKCHAIN_TXN_CREDIT.",
-    "PATCH /api/v1/did always catalogs its 3 API_CREDIT base cost. When didDocument is present, application code must reserve 5 API_CREDIT plus 1000 deferred BLOCKCHAIN_TXN_CREDIT for update or deactivate.",
+    "POST /api/v1/credential/issue always catalogs its 5 API_CREDIT base cost. When persist=true, application code must reserve and immediately settle another 4 API_CREDIT. Unless registerCredentialStatus is explicitly false, the catalog also reserves 2000 deferred BLOCKCHAIN_TXN_CREDIT.",
+    "PATCH /api/v1/did always catalogs its 3 API_CREDIT base cost. When verificationMethodId selects the delegated authz path, the catalog also reserves 1000 deferred BLOCKCHAIN_TXN_CREDIT for update or deactivate.",
     "The dashboard grant producer must grant separate API_CREDIT and BLOCKCHAIN_TXN_CREDIT wallets for SSI_API before this catalog is enforced."
   ],
   "routes": [
     { "method": "GET", "path": "/api/v1/credential", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 1 }] },
     { "method": "GET", "path": "/api/v1/credential/:credentialId", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 1 }] },
-    { "method": "POST", "path": "/api/v1/credential/issue", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 5 }] },
+    { "method": "POST", "path": "/api/v1/credential/issue", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 5 }, { "id": "blockchain-transaction", "creditType": "BLOCKCHAIN_TXN_CREDIT", "amount": 2000, "settlementMode": "DEFERRED", "autoRecover": false, "when": { "source": "body", "path": "registerCredentialStatus", "operator": "notEquals", "value": false } }] },
     { "method": "PATCH", "path": "/api/v1/credential/status/:credentialId", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 8 }, { "id": "blockchain-transaction", "creditType": "BLOCKCHAIN_TXN_CREDIT", "amount": 2000, "settlementMode": "DEFERRED", "autoRecover": false }] },
     { "method": "POST", "path": "/api/v1/credential/status/register", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 10 }, { "id": "blockchain-transaction", "creditType": "BLOCKCHAIN_TXN_CREDIT", "amount": 2000, "settlementMode": "DEFERRED", "autoRecover": false }] },
     { "method": "POST", "path": "/api/v1/credential/verify", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 5 }] },
@@ -26,7 +26,7 @@
     { "method": "POST", "path": "/api/v1/credit/:creditId/activate", "charges": [] },
 
     { "method": "GET", "path": "/api/v1/did", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 1 }] },
-    { "method": "PATCH", "path": "/api/v1/did", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 3 }] },
+    { "method": "PATCH", "path": "/api/v1/did", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 3 }, { "id": "blockchain-transaction", "creditType": "BLOCKCHAIN_TXN_CREDIT", "amount": 1000, "settlementMode": "DEFERRED", "autoRecover": false, "when": { "source": "body", "path": "verificationMethodId", "operator": "exists" } }] },
     { "method": "POST", "path": "/api/v1/did/addVerificationMethod", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 5 }] },
     { "method": "POST", "path": "/api/v1/did/auth/issue-jwt", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 5 }] },
     { "method": "POST", "path": "/api/v1/did/auth/sign", "charges": [{ "id": "api", "creditType": "API_CREDIT", "amount": 5 }] },
