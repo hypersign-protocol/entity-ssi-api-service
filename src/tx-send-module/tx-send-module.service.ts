@@ -40,6 +40,17 @@ export class TxSendModuleService {
     this.connect();
   }
 
+  private transactionQueueMessage(type: string, txMsg: any, credit?: any) {
+    if (
+      credit?.schemaVersion === 1 &&
+      typeof credit.transactionJobId === 'string' &&
+      typeof credit.reservationId === 'string'
+    ) {
+      return { type, txMsg, credit };
+    }
+    return { type, txMsg };
+  }
+
   async invokeTxnController(address, granteeMnemonic, appDetail) {
     const podENV = {
       RMQ_URL: this.configService.get('RABBIT_MQ_URI'),
@@ -61,6 +72,8 @@ export class TxSendModuleService {
       Tx_Query_API:
         this.configService.get('Tx_Query_API') ||
         'https://api.atman.hypersign.id/cosmos/tx/v1beta1/txs/',
+      SSI_TXN_RESULT_EXCHANGE:
+        this.configService.get('SSI_TXN_RESULT_EXCHANGE') || 'ssi.txn.results',
     };
 
     await this.channel.assertQueue('GLOBAL_TXN_CONTROLLER_QUEUE', {
@@ -184,7 +197,13 @@ export class TxSendModuleService {
     });
   }
 
-  async sendUpdateVC(credentialStatus, proofValue, granteeMnemonic, appDetail) {
+  async sendUpdateVC(
+    credentialStatus,
+    proofValue,
+    granteeMnemonic,
+    appDetail,
+    creditTransaction?,
+  ) {
     if (!this.channel) {
       await this.connect();
     }
@@ -225,10 +244,11 @@ export class TxSendModuleService {
       value: authExecMsg,
     };
 
-    const data = {
-      type: 'CRED_UPDATE',
+    const data = this.transactionQueueMessage(
+      'CRED_UPDATE',
       txMsg,
-    };
+      creditTransaction,
+    );
 
     const queue = 'TXN_QUEUE_' + address;
     await this.channel.assertQueue(queue, {
@@ -248,6 +268,7 @@ export class TxSendModuleService {
     credentialStatusProof,
     granteeMnemonic,
     appDetail,
+    creditTransaction?,
   ) {
     if (!this.channel) {
       await this.connect();
@@ -290,10 +311,11 @@ export class TxSendModuleService {
       value: authExecMsg,
     };
 
-    const data = {
-      type: 'CRED_REGISTER',
+    const data = this.transactionQueueMessage(
+      'CRED_REGISTER',
       txMsg,
-    };
+      creditTransaction,
+    );
 
     const queue = 'TXN_QUEUE_' + address;
     await this.channel.assertQueue(queue, {
@@ -323,6 +345,7 @@ export class TxSendModuleService {
     versionId: any,
     granteeMnemonic: any,
     appDetail,
+    creditTransaction?,
   ) {
     Logger.log(
       'Inside  sendDIDDeactivate to deactivate the did.',
@@ -372,10 +395,11 @@ export class TxSendModuleService {
       durable: false,
     });
 
-    const data = {
-      type: 'DID_DEACTIVATE',
+    const data = this.transactionQueueMessage(
+      'DID_DEACTIVATE',
       txMsg,
-    };
+      creditTransaction,
+    );
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
       Buffer.from(JSON.stringify(data)),
@@ -403,6 +427,7 @@ export class TxSendModuleService {
     versionId,
     granteeMnemonic,
     appDetail,
+    creditTransaction?,
   ) {
     if (!this.channel) {
       await this.connect();
@@ -446,10 +471,11 @@ export class TxSendModuleService {
       durable: false,
     });
 
-    const data = {
-      type: 'DID_UPDATE',
+    const data = this.transactionQueueMessage(
+      'DID_UPDATE',
       txMsg,
-    };
+      creditTransaction,
+    );
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
       Buffer.from(JSON.stringify(data)),
@@ -464,6 +490,7 @@ export class TxSendModuleService {
     verificationMethodId,
     granteeMnemonic,
     appDetail,
+    creditTransaction?,
   ) {
     if (!this.channel) {
       await this.connect();
@@ -506,10 +533,11 @@ export class TxSendModuleService {
       durable: false,
     });
 
-    const data = {
-      type: 'DID_REGISTER',
+    const data = this.transactionQueueMessage(
+      'DID_REGISTER',
       txMsg,
-    };
+      creditTransaction,
+    );
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
       Buffer.from(JSON.stringify(data)),
@@ -526,7 +554,13 @@ export class TxSendModuleService {
     });
   }
 
-  async sendSchemaTxn(schema, proof, granteeMnemonic, appDetail) {
+  async sendSchemaTxn(
+    schema,
+    proof,
+    granteeMnemonic,
+    appDetail,
+    creditTransaction?,
+  ) {
     if (!this.channel) {
       await this.connect();
     }
@@ -564,10 +598,11 @@ export class TxSendModuleService {
       durable: false,
     });
 
-    const data = {
-      type: 'SCHEMA_REGISTER',
+    const data = this.transactionQueueMessage(
+      'SCHEMA_REGISTER',
       txMsg,
-    };
+      creditTransaction,
+    );
     const sendToQueue1 = await this.channel.sendToQueue(
       queue,
       Buffer.from(JSON.stringify(data)),

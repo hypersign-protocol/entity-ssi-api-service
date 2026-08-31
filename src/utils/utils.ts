@@ -15,6 +15,10 @@ import {
   ArgumentsHost,
   HttpStatus,
 } from '@nestjs/common';
+import {
+  CreditCatalogMismatchException,
+  InsufficientCreditsException,
+} from '@hypersign-protocol/credit-middleware';
 import bs58 from 'bs58';
 export const existDir = (dirPath) => {
   if (!dirPath) throw new Error('Directory path undefined');
@@ -79,7 +83,11 @@ export class AllExceptionsFilter implements ExceptionFilter {
 
     let status;
     let message;
-    if (exception instanceof HttpException) {
+    if (
+      exception instanceof HttpException ||
+      exception instanceof InsufficientCreditsException ||
+      exception instanceof CreditCatalogMismatchException
+    ) {
       status = exception.getStatus();
       message = exception.getResponse();
     } else {
