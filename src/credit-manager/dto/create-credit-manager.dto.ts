@@ -21,6 +21,7 @@ export class CreateCreditManagerDto {
   validityDurationUnit: ValidityPeriodUnit;
   serviceId: string;
   creditDenom: string;
+  creditedBy: string;
 }
 
 export class Credit {
@@ -185,4 +186,9 @@ export class CreditManagerRequestDto {
   })
   @IsString()
   creditScope: Array<string>;
+}
+
+export enum CreditNotificationJobNames {
+  CREDIT_USAGE = 'credit-usage-notification',
+  CREDIT_EXPIRY = 'credit-expiry-notification',
 }

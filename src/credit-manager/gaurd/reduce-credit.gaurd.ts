@@ -100,6 +100,9 @@ export class ReduceCreditGuard implements CanActivate {
                     status: 'Inactive',
                   },
                 );
+                void this.creditService.checkAndTriggerNotifications(
+                  activeCredit._id.toString(),
+                );
                 Logger.log(
                   `Deducted ${deductedCredits} credits and ${deductedHID} HID from active plan`,
                   'ReduceCreditGuard',
@@ -112,6 +115,9 @@ export class ReduceCreditGuard implements CanActivate {
                       [`credit.used`]: remainingHIDNeeded,
                     },
                   },
+                );
+                void this.creditService.checkAndTriggerNotifications(
+                  inactiveCreditPlan._id.toString(),
                 );
                 Logger.log(
                   `Deducted remaining ${remainingCreditsNeeded} credits from new plan`,
@@ -137,6 +143,9 @@ export class ReduceCreditGuard implements CanActivate {
                   ),
                 },
               },
+            );
+            void this.creditService.checkAndTriggerNotifications(
+              activeCredit._id.toString(),
             );
           }
           Logger.log('Credits deducted successfully', 'ReduceCreditGuard');
