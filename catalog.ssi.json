@@ -1,0 +1,377 @@
+{
+  "serviceType": "SSI_API",
+  "version": "3.7.3",
+  "globalPrefix": "api/v1",
+  "versioning": "NONE",
+  "uriVersionPrefix": "v",
+  "defaultVersion": "1",
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/api/v1/credential",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/credential/:credentialId",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/credential/issue",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 5
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 2000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false,
+          "when": {
+            "source": "body",
+            "path": "registerCredentialStatus",
+            "operator": "notEquals",
+            "value": false
+          }
+        }
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/credential/status/:credentialId",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 8
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 2000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/credential/status/register",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 10
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 2000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/credential/verify",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/credit",
+      "charges": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/credit",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/credit/:creditId",
+      "charges": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/credit/:creditId/activate",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/did",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/did",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 3
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 1000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false,
+          "when": {
+            "source": "body",
+            "path": "verificationMethodId",
+            "operator": "exists"
+          }
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/did/addVerificationMethod",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/did/auth/issue-jwt",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/did/auth/sign",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/did/auth/verify",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 5
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/did/create",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 7
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/did/register",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 10
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 4000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/did/register/v2",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 10
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 4000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/did/resolve/:did",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/presentation",
+      "charges": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/presentation/request",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/presentation/template",
+      "charges": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/presentation/template",
+      "charges": []
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/presentation/template/:templateId",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/presentation/template/:templateId",
+      "charges": []
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/presentation/template/:templateId",
+      "charges": []
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/presentation/verify",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/schema",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/schema",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 10
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 2000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/schema/:schemaId",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 1
+        }
+      ]
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/schema/register",
+      "charges": [
+        {
+          "id": "api",
+          "creditType": "API_CREDIT",
+          "amount": 10
+        },
+        {
+          "id": "blockchain-transaction",
+          "creditType": "BLOCKCHAIN_TXN_CREDIT",
+          "amount": 2000,
+          "settlementMode": "DEFERRED",
+          "autoRecover": false
+        }
+      ]
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/status/ssi/:id",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/status/transaction/:transactionHash",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/usage",
+      "charges": []
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/usage/detail",
+      "charges": []
+    }
+  ]
+}

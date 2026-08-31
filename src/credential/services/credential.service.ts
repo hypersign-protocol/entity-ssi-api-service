@@ -81,7 +81,11 @@ export class CredentialService {
     }
   }
 
-  async create(createCredentialDto: CreateCredentialDto, appDetail) {
+  async create(
+    createCredentialDto: CreateCredentialDto,
+    appDetail,
+    creditTransaction?,
+  ) {
     const start = this.logStart(
       'create',
       'create and optionally persist a verifiable credential',
@@ -267,7 +271,11 @@ export class CredentialService {
         namespace: nameSpace,
       } as RegisterCredentialStatusDto;
       if (registerCredentialStatus) {
-        await this.registerCredentialStatus(credStatus, appDetail);
+        await this.registerCredentialStatus(
+          credStatus,
+          appDetail,
+          creditTransaction,
+        );
       }
       let edvData = undefined;
       if (persist) {
@@ -463,6 +471,7 @@ export class CredentialService {
     id: string,
     updateCredentialDto: UpdateCredentialDto,
     appDetail,
+    creditTransaction?,
   ) {
     const start = this.logStart(
       'update',
@@ -576,6 +585,7 @@ export class CredentialService {
           updateCredenital?.proofValue,
           appMenemonic,
           appDetail,
+          creditTransaction,
         );
       } else {
         updatedCredResult = await hypersignVC.updateCredentialStatus({
@@ -695,6 +705,7 @@ export class CredentialService {
   async registerCredentialStatus(
     registerCredentialDto: RegisterCredentialStatusDto,
     appDetail,
+    creditTransaction?,
   ) {
     const start = this.logStart(
       'registerCredentialStatus',
@@ -743,14 +754,21 @@ export class CredentialService {
       }
       Logger.log(`Address: ${address}`);
       const isDevMode = this.config.get('NODE_ENV') === 'development';
-      if (!isDevMode && (await this.checkAllowence(address))) {
+      const hasAllowance = await this.checkAllowence(address);
+      if (!isDevMode && hasAllowance) {
         await this.txnService.sendVCTxn(
           credentialStatus,
           proof,
           appMenemonic,
           appDetail,
+          creditTransaction,
         );
       } else {
+        if (creditTransaction) {
+          throw new BadRequestException([
+            'Blockchain fee allowance is unavailable for this application',
+          ]);
+        }
         registeredVC = await hypersignVC.registerCredentialStatus({
           credentialStatus,
           credentialStatusProof: proof,

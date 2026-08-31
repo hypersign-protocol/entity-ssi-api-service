@@ -56,6 +56,7 @@ export class SchemaService {
   async create(
     createSchemaDto: CreateSchemaDto,
     appDetail,
+    creditTransaction?,
   ): Promise<createSchemaResponse> {
     Logger.log('create() method: starts....', 'SchemaService');
     const { schema } = createSchemaDto;
@@ -126,6 +127,7 @@ export class SchemaService {
           signedSchema.proof,
           appMenemonic,
           appDetail,
+          creditTransaction,
         );
       } else {
         registeredSchema = await hypersignSchema.register({
@@ -256,6 +258,7 @@ export class SchemaService {
   async registerSchema(
     registerSchemaDto: RegisterSchemaDto,
     appDetail,
+    creditTransaction?,
   ): Promise<any> {
     Logger.log('registerSchema() method: starts....', 'SchemaService');
 
@@ -301,6 +304,7 @@ export class SchemaService {
           registerSchemaDto.schemaProof,
           appMenemonic,
           appDetail,
+          creditTransaction,
         );
       } else {
         registeredSchema = await hypersignSchema.register({

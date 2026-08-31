@@ -49,12 +49,12 @@ import { Credential } from '../schemas/credntial.schema';
 import { GetCredentialList } from '../dto/fetch-credential.dto';
 import { RegisterCredentialStatusDto } from '../dto/register-credential.dto';
 import { TxnHash } from 'src/did/dto/create-did.dto';
-import { ReduceCreditGuard } from 'src/credit-manager/gaurd/reduce-credit.gaurd';
 import { AccessGuard } from 'src/utils/guards/access.gaurd';
 import { Access } from 'src/utils/customDecorator/access.decorator';
 import { ACCESS_TYPES } from 'src/credit-manager/utils';
+import { getBlockchainCreditContext } from 'src/credit-transaction-context';
 @ApiBearerAuth('Authorization')
-@UseGuards(AuthGuard('jwt'), ReduceCreditGuard, AccessGuard)
+@UseGuards(AuthGuard('jwt'), AccessGuard)
 @Controller('credential')
 @ApiTags('Credential')
 export class CredentialController {
@@ -180,7 +180,11 @@ export class CredentialController {
     @Req() req,
   ) {
     Logger.log('CredentialController:: create() method: starts....');
-    return this.credentialService.create(createCredentialDto, req.user);
+    return this.credentialService.create(
+      createCredentialDto,
+      req.user,
+      getBlockchainCreditContext(req),
+    );
   }
   @UsePipes(ValidationPipe)
   @HttpCode(200)
@@ -252,6 +256,7 @@ export class CredentialController {
     return this.credentialService.registerCredentialStatus(
       registerCredentialDto,
       req.user,
+      getBlockchainCreditContext(req),
     );
   }
 
@@ -292,6 +297,7 @@ export class CredentialController {
       credentialId,
       updateCredentialDto,
       req.user,
+      getBlockchainCreditContext(req),
     );
   }
 }
