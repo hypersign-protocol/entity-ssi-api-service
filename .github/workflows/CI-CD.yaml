@@ -116,7 +116,7 @@ jobs:
       run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_URL__/${{ secrets.GOOGLE_ARTIFACT_URL }}/g'' {} \;
     - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_ARTIFACT_REPO__/${{ secrets.GOOGLE_ARTIFACT_REPO }}/g'' {} \;
-        - name: "Replace secrets"
+    - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__CREDIT_USAGE_THRESHOLDS__#${{ vars.CREDIT_USAGE_THRESHOLDS }}#" {} \;
     - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__DASHBOARD_NOTIFICATION_QUEUE__#${{ vars.DASHBOARD_NOTIFICATION_QUEUE }}#" {} \;
