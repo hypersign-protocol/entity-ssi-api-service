@@ -29,6 +29,7 @@ import { getAppVault, getAppMenemonic } from '../../utils/app-vault-service';
 import { TxSendModuleService } from 'src/tx-send-module/tx-send-module.service';
 import * as NodeCache from 'node-cache';
 import { StatusService } from 'src/status/status.service';
+import { DidService } from 'src/did/services/did.service';
 const CACHE_TTL_SECONDS = 300;
 const myCache = new NodeCache({ stdTTL: CACHE_TTL_SECONDS, checkperiod: 60 });
 @Injectable()
@@ -41,6 +42,7 @@ export class CredentialService {
     private readonly didRepositiory: DidRepository,
     private readonly txnService: TxSendModuleService,
     private readonly statusService: StatusService,
+    private readonly didService: DidService,
   ) {}
 
   private logStart(fn: string, description: string) {
@@ -101,7 +103,8 @@ export class CredentialService {
       verificationMethodId,
       persist,
     } = createCredentialDto;
-    let { registerCredentialStatus } = createCredentialDto;
+    const registerCredentialStatus =
+      createCredentialDto.registerCredentialStatus ?? true;
     const nameSpace = this.config.get('HID_NETWORK_NAMESPACE') || '';
     const didOfvmId = verificationMethodId.split('#')[0]; // issuer's did
     const { edvId, kmsId } = appDetail;
@@ -156,14 +159,22 @@ export class CredentialService {
         'resolving issuer DID',
       );
       let didDocument;
-      if (myCache.has(issuerDid)) {
+      if (registerCredentialStatus === false) {
+        const resolvedDid = await this.didService.resolveDid(
+          appDetail,
+          issuerDid,
+        );
+        didDocument = resolvedDid?.didDocument;
+      } else if (myCache.has(issuerDid)) {
         didDocument = myCache.get(issuerDid);
         Logger.debug('Getting from Cache');
       } else {
         const resp = await hypersignDid.resolve({ did: issuerDid });
         didDocument = resp?.didDocument;
-        myCache.set(issuerDid, didDocument, CACHE_TTL_SECONDS);
-        Logger.log('Setting Cache');
+        if (didDocument?.verificationMethod) {
+          myCache.set(issuerDid, didDocument, CACHE_TTL_SECONDS);
+          Logger.log('Setting Cache');
+        }
       }
       if (!didDocument || !Array.isArray(didDocument.verificationMethod)) {
         throw new NotFoundException([
@@ -243,9 +254,6 @@ export class CredentialService {
         'CredentialService',
       );
 
-      if (registerCredentialStatus == undefined) {
-        registerCredentialStatus = true;
-      }
       const issueCredentialStart = this.logStart(
         'issueCredential',
         'issuing credential and registering credential status on blockchain if registerCredentialStatus is true',
