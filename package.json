@@ -23,6 +23,7 @@
     "catalog:check": "node scripts/generate-credit-catalog.js --check",
     "bumpVersion": "npm version --tag-version-prefix ''",
     "pushTag": "git push origin --tag",
+    "postinstall": "patch-package",
     "prepare": "husky install"
   },
   "dependencies": {
