@@ -330,6 +330,7 @@ export class DidService {
         hdPathIndex: null,
         transactionHash: '',
         registrationStatus: RegistrationStatus.UNREGISTRED,
+        keyTypes,
         name: createDidDto.options?.name,
       });
       Logger.log(
@@ -919,11 +920,10 @@ export class DidService {
       let resolvedDid;
       const hypersignDid = new HypersignDID();
       const resolvedDIDDocFromBc = await hypersignDid.resolve({ did });
-      if (
-        (!resolvedDIDDocFromBc ||
-          Object.keys(resolvedDIDDocFromBc.didDocument).length == 0) &&
-        didInfo
-      ) {
+      const isBlockchainDidDocumentEmpty =
+        !resolvedDIDDocFromBc?.didDocument ||
+        Object.keys(resolvedDIDDocFromBc.didDocument).length === 0;
+      if (isBlockchainDidDocumentEmpty && didInfo) {
         // didInfo !== null && didInfo.registrationStatus !== 'COMPLETED') {
         const { edvId, kmsId } = appDetail;
         Logger.log(
@@ -932,19 +932,8 @@ export class DidService {
         );
         const mnemonic = await getAppMenemonic(kmsId);
         const parts = did.split(':');
-        let namespace;
-        if (parts.length == 4) {
-          namespace = parts[3];
-        } else {
-          namespace = '';
-        }
-        let methodSpecificId: string;
-
-        if (namespace && namespace !== '') {
-          methodSpecificId = parts[3];
-        } else {
-          methodSpecificId = parts[2];
-        }
+        const namespace = parts.length === 4 ? parts[2] : '';
+        const methodSpecificId = parts.at(-1);
 
         if (!methodSpecificId) {
           throw new Error(`Invalid DID format: ${did}`);
@@ -976,6 +965,20 @@ export class DidService {
           methodSpecificId,
           publicKeyMultibase,
         });
+
+        for (const keyType of didInfo.keyTypes?.slice(1) ?? []) {
+          if (keyType === IKeyType.BabyJubJubKey2021) {
+            const { publicKeyMultibase: bjjPublicKeyMultibase } =
+              await hypersignDid.bjjDID.generateKeys({
+                mnemonic: userMnemonic,
+              });
+            resolvedDid = await this.addVerificationMethod({
+              didDocument: resolvedDid,
+              type: IKeyType.BabyJubJubKey2021,
+              publicKeyMultibase: bjjPublicKeyMultibase,
+            });
+          }
+        }
 
         const tempResolvedDid = {
           didDocument: resolvedDid,
