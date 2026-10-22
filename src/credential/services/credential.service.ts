@@ -159,24 +159,35 @@ export class CredentialService {
         'resolving issuer DID',
       );
       let didDocument;
-      if (registerCredentialStatus === false) {
-        const resolvedDid = await this.didService.resolveDid(
-          appDetail,
-          issuerDid,
-        );
-        didDocument = resolvedDid?.didDocument;
-      } else if (myCache.has(issuerDid)) {
+      if (myCache.has(issuerDid)) {
         didDocument = myCache.get(issuerDid);
         Logger.debug('Getting from Cache');
       } else {
         const resp = await hypersignDid.resolve({ did: issuerDid });
         didDocument = resp?.didDocument;
-        if (didDocument?.verificationMethod) {
+        if (
+          Array.isArray(didDocument?.verificationMethod) &&
+          didDocument.verificationMethod.length > 0
+        ) {
           myCache.set(issuerDid, didDocument, CACHE_TTL_SECONDS);
           Logger.log('Setting Cache');
         }
       }
-      if (!didDocument || !Array.isArray(didDocument.verificationMethod)) {
+      if (
+        registerCredentialStatus === false &&
+        (!Array.isArray(didDocument?.verificationMethod) ||
+          didDocument.verificationMethod.length === 0)
+      ) {
+        const resolvedDid = await this.didService.resolveDid(
+          appDetail,
+          issuerDid,
+        );
+        didDocument = resolvedDid?.didDocument;
+      }
+      if (
+        !Array.isArray(didDocument?.verificationMethod) ||
+        didDocument.verificationMethod.length === 0
+      ) {
         throw new NotFoundException([
           `Issuer DID ${issuerDid} is not registered or could not be resolved`,
         ]);
