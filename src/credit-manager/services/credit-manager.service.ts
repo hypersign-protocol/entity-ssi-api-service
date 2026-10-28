@@ -13,8 +13,6 @@ import {
 import { CreditManagerRepository } from '../repository/credit-manager.repository';
 import { CreditManager, Status } from '../schema/credit-manager.schema';
 import { ConfigService } from '@nestjs/config';
-import { MailClientService } from 'src/mailClient/service/mail-client.service';
-import { CreditUsageNotificationJob } from 'src/mailClient/dto/create-email.dto';
 
 @Injectable()
 export class CreditService {
@@ -23,7 +21,6 @@ export class CreditService {
   constructor(
     private readonly creditRepository: CreditManagerRepository,
     private readonly configService: ConfigService,
-    private readonly mailClientService: MailClientService,
   ) {
     this.creditExpiryThresholds =
       this.configService
@@ -274,18 +271,6 @@ export class CreditService {
       const notificationQueue =
         this.configService.get('DASHBOARD_NOTIFICATION_QUEUE') ||
         'Credit-Usage-Notification-Queue';
-      await this.mailClientService.addAJob<CreditUsageNotificationJob>(
-        {
-          serviceId: plan.serviceId,
-          totalCredits: plan.totalCredits,
-          usedCredits: plan.used,
-          usedPercentage,
-          threshold: thresholdToNotify,
-          expiresAt: plan.expiresAt?.toISOString(),
-        },
-        notificationQueue,
-        CreditNotificationJobNames.CREDIT_USAGE,
-      );
 
       const updatedResult = await this.creditRepository.updateCreditDetail(
         {
@@ -356,19 +341,6 @@ export class CreditService {
       const notificationQueue =
         this.configService.get('DASHBOARD_NOTIFICATION_QUEUE') ||
         'Credit-Notification-Queue';
-
-      await this.mailClientService.addAJob(
-        {
-          serviceId: plan.serviceId,
-          totalCredits: plan.totalCredits,
-          usedCredits: plan.used,
-          expiresAt: plan.expiresAt.toISOString(),
-          remainingDays,
-          threshold: thresholdToNotify,
-        },
-        notificationQueue,
-        CreditNotificationJobNames.CREDIT_EXPIRY,
-      );
       const updatedResult = await this.creditRepository.updateCreditDetail(
         {
           serviceId: plan.serviceId,
