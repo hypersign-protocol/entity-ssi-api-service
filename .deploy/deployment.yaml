@@ -76,6 +76,8 @@ spec:
           value: __CREDIT_EXPIRY_THRESHOLDS__  
         - name: DASHBOARD_NOTIFICATION_QUEUE
           value: __DASHBOARD_NOTIFICATION_QUEUE__
+        - name: TRUSTED_CORS_ORIGINS
+          value: __TRUSTED_CORS_ORIGINS__
         volumeMounts:
         - name: mongo
           mountPath: "/data"

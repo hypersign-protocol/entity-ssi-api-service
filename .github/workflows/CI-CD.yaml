@@ -126,5 +126,7 @@ jobs:
       run: find .deploy/deployment.yaml -type f -exec sed  -i -e "s#__NODE_ENV__#${{ secrets.NODE_ENV }}#" {} \;
     - name: "Replace secrets"
       run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__GOOGLE_PROJECT_ID__/${{ secrets.GOOGLE_PROJECT_ID }}/g'' {} \;
+    - name: "Replace secrets"
+      run: find .deploy/deployment.yaml -type f -exec sed  -i ''s/__TRUSTED_CORS_ORIGINS__/${{ secrets.TRUSTED_CORS_ORIGINS }}/g'' {} \;
     - name: "Deploy to GKE"
       run: kubectl apply -f .deploy/deployment.yaml
