@@ -53,8 +53,20 @@ export class WhitelistSSICorsMiddleware implements NestMiddleware {
     // ------------------------------------------------------------------
     // 5️⃣ CORS origin validation
     // ------------------------------------------------------------------
+    // Added trusted origins
+    const trustedOrigins = (
+      process.env.TRUSTED_CORS_ORIGINS ?? 'https://verify.hypersign.id'
+    )
+      .split(',')
+      .map((value) => value.trim().replace(/\/$/, ''))
+      .filter(Boolean);
+    const isTrustedServerOrigin = origin
+      ? trustedOrigins.includes(origin.replace(/\/$/, ''))
+      : false;
+
     if (
       origin &&
+      !isTrustedServerOrigin &&
       !whitelistedCors.includes('*') &&
       !whitelistedCors.includes(origin)
     ) {
