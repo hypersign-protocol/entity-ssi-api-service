@@ -14,6 +14,7 @@ import {
   UseInterceptors,
   Headers,
   Logger,
+  BadRequestException,
 } from '@nestjs/common';
 import { DidService } from '../services/did.service';
 import {
@@ -189,6 +190,14 @@ export class DidController {
       ? [options.keyType]
       : [IKeyType.Ed25519VerificationKey2020];
     const keyTypeAtZeroIndex = keyTypes[0];
+    if (
+      keyTypes.includes(IKeyType.BabyJubJubKey2021) &&
+      keyTypeAtZeroIndex !== IKeyType.Ed25519VerificationKey2020
+    ) {
+      throw new BadRequestException([
+        'BabyJubJubKey2021 requires Ed25519VerificationKey2020 as the first key type',
+      ]);
+    }
     switch (keyTypeAtZeroIndex) {
       case IKeyType.EcdsaSecp256k1RecoveryMethod2020: {
         const response = this.didService.createByClientSpec(

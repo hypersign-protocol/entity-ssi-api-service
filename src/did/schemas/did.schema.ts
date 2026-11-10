@@ -63,6 +63,11 @@ export class Did {
   @IsString()
   kmsId: string;
 
+  @ApiHideProperty()
+  @IsOptional()
+  @Prop({ type: [String], required: false })
+  keyTypes?: string[];
+
   @ApiProperty({
     name: 'name',
   })
